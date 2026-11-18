@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingeniería de datos para la investigación</title>
+<meta name="description" content="Curso taller: procesamiento de imágenes satelitales con deep learning. Slides y laboratorios. Cesar Aybar.">
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400 700; font-display: swap; src: url(fuentes/fuentes-tipograficas/Inter-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Space Grotesk'; font-weight: 500 700; font-display: swap; src: url(fuentes/fuentes-tipograficas/SpaceGrotesk-latin.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 400 700; font-display: swap; src: url(fuentes/fuentes-tipograficas/JetBrainsMono-latin.woff2) format('woff2'); }
+:root {
+  --bg: #FFFFFF; --ink: #1A1A1A; --muted: #555B61; --line: #D6D6D6;
+  --accent: #D9692A; --accent-text: #A84B15; --navy: #15222E;
+  --f-text: 'Inter', system-ui, sans-serif; --f-head: 'Space Grotesk', 'Inter', sans-serif; --f-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #15222E; --ink: #EEF1F4; --muted: #A9B6C2; --line: #2E3F4F; --accent-text: #F29A5E; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.5 var(--f-text); -webkit-font-smoothing: antialiased; }
+main { max-width: 860px; margin: 0 auto; padding: 72px 16px 56px; }
+.barra { height: 6px; background: var(--accent); }
+h1 { font: 700 44px/1.1 var(--f-head); letter-spacing: -.5px; margin: 0 0 10px; }
+.sub { color: var(--muted); margin: 0 0 48px; font-size: 20px; }
+h2 { font: 600 15px/1 var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 48px 0 8px; }
+.clase { display: grid; grid-template-columns: 110px 1fr; gap: 4px 24px; padding: 22px 0; border-top: 1px solid var(--line); }
+.clase:last-of-type { border-bottom: 1px solid var(--line); }
+.num { font: 700 28px/1.1 var(--f-head); color: var(--accent-text); }
+.fecha { display: block; margin-top: 6px; font: 500 15px/1.4 var(--f-text); color: var(--muted); white-space: nowrap; }
+.tema { font: 600 22px/1.25 var(--f-head); margin: 0 0 10px; }
+.links { margin: 0; font-size: 17px; }
+.links a { margin-right: 18px; }
+a { color: var(--accent-text); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+.teclas { margin: 0; padding: 0; list-style: none; }
+.teclas li { padding: 4px 0; }
+kbd { font: 500 14px/1 var(--f-mono); border: 1px solid var(--line); border-bottom-width: 2px; padding: 3px 7px; margin-right: 8px; }
+footer { margin-top: 56px; font-size: 15px; color: var(--muted); }
+@media (max-width: 560px) {
+  h1 { font-size: 34px; }
+  .clase { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="barra"></div>
+<main>
+  <h1>Ingeniería de datos para la investigación</h1>
+  <p class="sub">Curso taller: procesamiento de imágenes satelitales con deep learning · Cesar Aybar</p>
+
+  <h2>Clases</h2>
+  <div class="clase">
+    <p class="num">Clase 1<br><span class="fecha">Miércoles 18 nov</span></p>
+    <div>
+      <p class="tema">La arquitectura de cómputo: disco, RAM y CPU</p>
+      <p class="links"><a href="clase-01/slides.html">Slides</a><a href="clase-01/slides.pdf">PDF</a><a href="clase-01/laboratorio-disco-ram-cpu.ipynb" download>Laboratorio (.ipynb)</a></p>
+    </div>
+  </div>
+  <div class="clase">
+    <p class="num">Clase 2<br><span class="fecha">Viernes 20 nov</span></p>
+    <div>
+      <p class="tema">PCIe, VRAM y la GPU</p>
+      <p class="links"><a href="clase-02/slides.html">Slides</a><a href="clase-02/slides.pdf">PDF</a></p>
+    </div>
+  </div>
+
+  <h2>En las slides</h2>
+  <ul class="teclas">
+    <li><kbd>→</kbd> avanza (primero las animaciones de cada slide)</li>
+    <li><kbd>S</kbd> abre las notas del expositor</li>
+    <li><kbd>F</kbd> pantalla completa · <kbd>O</kbd> todas las slides</li>
+  </ul>
+
+  <h2>Laboratorio</h2>
+  <p>El notebook de la clase 1 se corre en tu computador con Jupyter o VS Code. Necesita Python con NumPy y, para el último experimento, un compilador de C.</p>
+
+  <footer>Código y material: <a href="https://github.com/csaybar/curso-ingenieria-de-datos">github.com/csaybar/curso-ingenieria-de-datos</a></footer>
+</main>
+</body>
+</html>

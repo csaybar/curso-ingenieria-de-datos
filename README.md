@@ -4,6 +4,8 @@ Curso taller: procesamiento de imágenes satelitales con deep learning. Cesar Ay
 
 Material de las clases: slides, notas para el expositor y laboratorios.
 
+En línea: https://csaybar.github.io/curso-ingenieria-de-datos/
+
 | Clase | Fecha | Tema | Material |
 |---|---|---|---|
 | 1 | Miércoles 18 de noviembre de 2026 | La arquitectura de cómputo: disco, RAM y CPU | [slides](clase-01/slides.html) · [PDF](clase-01/slides.pdf) · [laboratorio](clase-01/laboratorio-disco-ram-cpu.ipynb) |
