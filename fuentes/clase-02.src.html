@@ -1,0 +1,1894 @@
+<!doctype html>
+<!--
+  Curso taller «Ingeniería de datos para la investigación:
+  procesamiento de imágenes satelitales con deep learning»
+  Clase 2 · Cesar Aybar
+
+  Un solo archivo HTML: funciona sin internet en Chrome, Edge o Firefox.
+
+  Teclas:
+    → / Espacio / AvPág   siguiente (primero las animaciones de la slide)
+    ← / RePág             anterior
+    S                     ventana del orador (notas, siguiente slide, reloj)
+    O                     ver todas las slides
+    F                     pantalla completa
+    B                     pantalla en negro
+    número + Enter        ir a una slide
+    D                     lápiz para marcar (Z deshace, C borra)
+    Ctrl+P                guardar como PDF (márgenes: ninguno; gráficos de fondo: sí)
+
+  Para editar: cada slide es un <section class="slide">; las notas del orador
+  van en <aside class="notes">. Lo que aparece con un clic lleva class="fragment"
+  (data-step agrupa varios en el mismo clic). Colores y fuentes en :root.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ingeniería de datos · Clase 2</title>
+<meta name="description" content="Curso taller Ingeniería de datos para la investigación: procesamiento de imágenes satelitales con deep learning. Clase 2.">
+<style>
+/* ---------- Colores y fuentes ---------- */
+:root {
+  --ink: #1A1A1A;
+  --muted: #555B61;
+  --line: #D6D6D6;
+  --bg: #FFFFFF;
+  --soft: #F2F1EE;
+  --navy: #15222E;
+  --paper: #F5F3EE;
+  --accent: #D9692A;
+  --accent-text: #A84B15;
+  --accent-bright: #E8803F;
+  --accent-soft: #F6DDCB;
+  --blue: #2D6A9F;
+  --blue-soft: #C9DBEC;
+  --slate: #8796A5;
+  --platter: #D5DCE3;
+  --f-head: 'Space Grotesk', 'Segoe UI', Arial, sans-serif;
+  --f-text: 'Inter', 'Segoe UI', Arial, sans-serif;
+  --f-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
+
+/* ---------- Motor ---------- */
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0B1218; }
+body { font-family: var(--f-text); color: var(--ink); -webkit-font-smoothing: antialiased; }
+.deck { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform: translate(-50%, -50%) scale(var(--scale, 0.5)); }
+.frame { position: absolute; inset: 0; }
+.slide { position: absolute; inset: 0; box-sizing: border-box; width: 1920px; height: 1080px; padding: 120px 128px 150px; overflow: hidden;
+  background: var(--bg); color: var(--ink); font-size: 32px; line-height: 1.35;
+  visibility: hidden; opacity: 0; transition: opacity .3s ease, visibility 0s linear .3s; }
+.slide.active { visibility: visible; opacity: 1; transition: opacity .3s ease; }
+.slide *, .slide *::before, .slide *::after { box-sizing: border-box; }
+.slide h1, .slide h2, .slide h3, .slide p, .slide ul, .slide ol, .slide pre { margin: 0; }
+.notes { display: none; }
+.slide.orange { padding: 128px; background: var(--accent-bright); color: var(--navy); }
+
+.fragment { opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s ease; }
+.fragment.visible { opacity: 1; transform: none; }
+.tbl .fragment, .tbl .fragment.visible { transform: none; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.slide.active .rise { animation: rise .45s ease-out both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.slide.active .spin { animation: spin 2.4s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -40; } }
+@keyframes grow { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .slide.active .rise, .slide.active .spin, .slide.active .flow, .slide.active .grow { animation: none; }
+}
+
+.foot { position: absolute; right: 128px; bottom: 56px; font: 24px/1 var(--f-text); color: var(--muted); }
+
+/* Lápiz (D) */
+.ink { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; z-index: 3; touch-action: none; }
+body.pen { user-select: none; -webkit-user-select: none; }
+body.pen .slide.active .ink { pointer-events: auto; cursor: crosshair; }
+.tools { position: fixed; left: 16px; bottom: 16px; display: none; gap: 8px; align-items: center; padding: 8px 10px; background: rgba(21, 34, 46, .85); z-index: 6; }
+body.pen .tools { display: flex; }
+.tools .sw { width: 28px; height: 28px; padding: 0; border: 2px solid rgba(245, 243, 238, .6); cursor: pointer; }
+.tools .sw.on { outline: 3px solid #F5F3EE; outline-offset: 2px; }
+.tools .tb { font: 600 14px/1 var(--f-text); color: #F5F3EE; background: transparent; border: 1px solid rgba(245, 243, 238, .35); padding: 7px 10px; cursor: pointer; }
+
+/* Barra de progreso, botones, negro, ayuda */
+.progress { position: fixed; left: 0; bottom: 0; height: 3px; width: 0; background: var(--accent); transition: width .3s ease; z-index: 5; }
+.nav { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 6px; opacity: 0; transition: opacity .3s ease; z-index: 6; }
+body.mouse .nav { opacity: 1; }
+.nav button { font: 600 15px/1 var(--f-text); color: #F5F3EE; background: rgba(21, 34, 46, .8); border: 1px solid rgba(245, 243, 238, .25); padding: 9px 13px; cursor: pointer; }
+.nav button:hover { background: var(--accent); color: var(--navy); }
+.blackout { position: fixed; inset: 0; background: #000; display: none; z-index: 8; }
+body.black .blackout { display: block; }
+.help { position: fixed; inset: 0; display: none; place-items: center; background: rgba(11, 18, 24, .92); z-index: 9; color: #F5F3EE; }
+body.show-help .help { display: grid; }
+.help-box { background: var(--navy); padding: 32px 40px; min-width: 520px; }
+.help-box h2 { font: 600 26px/1.2 var(--f-head); margin: 0 0 16px; }
+.help-box table { border-collapse: collapse; font-size: 17px; }
+.help-box td { padding: 5px 18px 5px 0; }
+.help-box td:first-child { font-weight: 600; color: #F29A5E; white-space: nowrap; }
+
+/* Vista general (O) */
+body.overview { overflow: auto; }
+body.overview .deck { position: static; transform: none; width: auto; height: auto; display: grid; grid-template-columns: repeat(auto-fill, 384px); gap: 20px; padding: 28px; justify-content: center; }
+body.overview .frame { position: relative; inset: auto; width: 384px; height: 216px; overflow: hidden; cursor: pointer; outline: 3px solid transparent; outline-offset: 3px; }
+body.overview .frame.current { outline-color: var(--accent); }
+body.overview .slide { visibility: visible; opacity: 1; transform: scale(.2); transform-origin: 0 0; transition: none; }
+body.overview .rise, body.overview .spin, body.overview .flow, body.overview .grow { animation: none !important; }
+body.overview .fragment { opacity: 1; transform: none; transition: none; }
+body.overview .progress, body.overview .nav, body.overview .tools { display: none; }
+
+/* Ventana del orador (S) */
+.speaker-root, .speaker-root body { overflow: auto; height: auto; }
+body.speaker { background: #0B1218; color: #E9ECEF; padding: 22px 26px; box-sizing: border-box; }
+.sp-top { display: flex; justify-content: space-between; align-items: center; gap: 24px; font: 600 18px/1.2 var(--f-text); margin: 0 0 18px; }
+.sp-title { flex: 1; font: 600 20px/1.2 var(--f-head); color: #F5F3EE; }
+.sp-clock { display: flex; align-items: center; gap: 12px; }
+.sp-time { font: 600 30px/1 var(--f-mono); color: #F29A5E; }
+.sp-now { color: #B9C6D2; }
+.sp-clock button { font: 600 13px/1 var(--f-text); color: #F5F3EE; background: #213240; border: 1px solid #3A4D5C; padding: 7px 10px; cursor: pointer; }
+.sp-grid { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.sp-label { font: 600 13px/1 var(--f-text); letter-spacing: 1px; color: #B9C6D2; margin: 0 0 8px; }
+.sp-view { position: relative; width: 576px; height: 324px; overflow: hidden; outline: 2px solid var(--accent); background: #000; }
+.sp-small { width: 384px; height: 216px; outline-color: #3A4D5C; }
+.sp-view .slide { visibility: visible; opacity: 1; transform: scale(.3); transform-origin: 0 0; transition: none; }
+.sp-small .slide { transform: scale(.2); }
+.sp-steps { font: 600 15px/1.3 var(--f-text); color: #F29A5E; margin: 10px 0 0; }
+.sp-notes { margin: 22px 0 0; max-width: 1100px; font: 22px/1.5 var(--f-text); color: #E9ECEF; white-space: pre-line; }
+.speaker .rise, .speaker .spin, .speaker .flow, .speaker .grow { animation: none !important; }
+.speaker .fragment { transition: none; }
+
+/* PDF (Ctrl+P) */
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  html, body { height: auto; overflow: visible; background: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .deck { position: static; transform: none; width: 1920px; height: auto; display: block; padding: 0; }
+  .frame { position: relative; inset: auto; width: 1920px; height: 1080px; overflow: hidden; break-after: page; page-break-after: always; outline: none; }
+  .frame:last-child { break-after: auto; page-break-after: auto; }
+  .slide { visibility: visible; opacity: 1; transform: none; transition: none; }
+  .rise, .spin, .flow, .grow { animation: none !important; }
+  .fragment { opacity: 1; transform: none; transition: none; }
+  .race-fill { width: 100% !important; }
+  .race-time { opacity: 1 !important; }
+  .progress, .nav, .blackout, .help, .tools { display: none !important; }
+}
+
+/* ---------- Estilos de las slides ---------- */
+.title { font: 600 64px/1.1 var(--f-head); letter-spacing: -1px; margin: 0 0 52px !important; }
+.lead { font-size: 34px; color: var(--muted); margin: -26px 0 44px !important; max-width: 1500px; }
+.muted { color: var(--muted); }
+.small { font-size: 24px; color: var(--muted); }
+.bul { padding-left: 1.1em; line-height: 1.4; }
+.bul li + li { margin-top: 20px; }
+.bul b, .num-list b { font-weight: 600; }
+.num-list { padding-left: 1.4em; line-height: 1.4; }
+.num-list li + li { margin-top: 22px; }
+.num-list li::marker { font-weight: 600; color: var(--accent-text); }
+.code { font: 24px/1.5 var(--f-mono); background: var(--soft); padding: 22px 28px; white-space: pre; color: var(--ink); }
+.code .c { color: #6B7178; }
+.next { position: absolute; left: 128px; bottom: 56px; font-size: 24px; color: var(--muted); }
+
+/* Portada */
+.cover-wrap { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.cover-kicker { font: 600 30px/1.2 var(--f-head); margin: 0 0 24px !important; }
+.cover-title { font: 700 84px/1.04 var(--f-head); letter-spacing: -2px; max-width: 1600px; }
+.cover-class { font: 600 44px/1.2 var(--f-head); margin-top: 48px !important; }
+.cover-class span { display: block; font-weight: 500; font-size: 36px; margin-top: 8px; }
+.cover-meta { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 28px; border-top: 3px solid var(--navy); font-size: 28px; }
+.cover-meta b { font: 600 34px/1.2 var(--f-head); }
+
+/* Slides naranjas */
+.orange .eyebrow { font: 600 24px/1.2 var(--f-mono); letter-spacing: 3px; text-transform: uppercase; margin: 0 0 16px !important; }
+.st-title { font: 700 120px/1 var(--f-head); letter-spacing: -3px; margin: 0 0 80px !important; }
+.chain { display: flex; align-items: center; gap: 18px; margin: 0 0 64px; }
+.link { width: 196px; padding: 24px 0; border: 3px solid var(--navy); background: var(--paper); font: 600 30px/1.2 var(--f-mono); text-align: center; color: var(--navy); }
+.link.gpu { background: var(--navy); color: var(--paper); }
+.arrow { font: 44px/1 var(--f-mono); }
+.st-sub { font-size: 44px; line-height: 1.25; max-width: 1400px; }
+.chain.focus .link { opacity: .45; background: var(--paper); color: var(--navy); }
+.chain.focus .link.on { opacity: 1; background: var(--navy); color: var(--paper); }
+.chain.focus .arrow { opacity: .45; }
+
+/* Tres números */
+.term-row { display: grid; grid-template-columns: 330px 1fr; align-items: baseline; gap: 40px; padding: 30px 0; border-top: 2px solid var(--line); }
+.term-row:last-child { border-bottom: 2px solid var(--line); }
+.term { font: 600 52px/1.1 var(--f-head); }
+.term-d span { display: block; font-size: 28px; color: var(--muted); margin-top: 6px; }
+
+/* Tablas */
+.tbl { width: 100%; border-collapse: collapse; font-size: 28px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.tbl th { text-align: left; font-weight: 700; padding: 10px 16px 12px; border-bottom: 3px solid var(--ink); vertical-align: bottom; }
+.tbl td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl .num { text-align: right; white-space: nowrap; }
+.tbl .hl { color: var(--accent-text); font-weight: 700; }
+.tbl .mono { font-family: var(--f-mono); font-size: 26px; }
+.tbl .strong { font-weight: 600; }
+
+/* Diagramas */
+.diag { display: grid; grid-template-columns: 820px 1fr; gap: 64px; align-items: center; }
+.diag svg { display: block; width: 820px; height: 600px; }
+.svg-lbl { font-family: var(--f-text); font-size: 26px; font-weight: 600; fill: var(--ink); }
+.svg-lbl-light { font-family: var(--f-text); font-size: 26px; font-weight: 600; fill: #FFFFFF; }
+.steps-txt p + p { margin-top: 28px; }
+.steps-txt .big { font: 600 40px/1.2 var(--f-head); }
+.arm { transform-box: view-box; transform-origin: 690px 500px; transition: transform 1s cubic-bezier(.5, 0, .3, 1); }
+.fragment.arm { opacity: 1; transform: rotate(10deg); }
+.fragment.arm.visible { transform: rotate(0deg); }
+.ssd-svg { display: block; width: 1664px; height: 320px; margin-bottom: 44px; }
+.fragment.chan { opacity: 1; transform: none; }
+.chan path { stroke-dasharray: 12 8; }
+.slide.active .chan.visible path { animation: flow .8s linear infinite; }
+
+/* Barras de las conexiones */
+.pipe-row { display: grid; grid-template-columns: 360px 1060px 1fr; align-items: center; padding: 18px 0; border-top: 1px solid var(--line); }
+.pipe-row:last-of-type { border-bottom: 1px solid var(--line); }
+.pipe-name { font-weight: 600; }
+.pipe-sub { font-size: 24px; color: var(--muted); }
+.pipe-bar { height: 48px; background: var(--blue); }
+.pipe-bar.slow { background: var(--slate); }
+.slide.active .pipe-bar { animation: grow 1.4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 250ms); }
+.pipe-val { font-weight: 600; text-align: right; white-space: nowrap; }
+
+/* Carrera de copia */
+.race-group + .race-group { margin-top: 40px; }
+.race-h { font: 600 34px/1.2 var(--f-head); margin: 0 0 14px !important; }
+.race-row { display: grid; grid-template-columns: 260px 1fr 190px; gap: 24px; align-items: center; margin: 12px 0; }
+.race-track { height: 36px; background: var(--soft); }
+.race-fill { height: 36px; width: 0; background: var(--navy); }
+.race-fill.hot { background: var(--accent); }
+.fragment.race { opacity: 1; transform: none; }
+.race.visible .race-fill { width: 100%; transition: width var(--t) linear; }
+.race-time { opacity: 0; font-weight: 700; text-align: right; white-space: nowrap; }
+.race.visible .race-time { opacity: 1; transition: opacity .2s linear var(--t); }
+
+/* COG */
+.cog { display: grid; grid-template-columns: 520px 1fr; gap: 72px; align-items: start; }
+.cog svg { display: block; width: 520px; height: 580px; }
+.cog-txt p + p { margin-top: 24px; }
+.cog-txt .code { margin-top: 36px; }
+
+/* Quién mueve los datos del disco a la RAM */
+.mover { display: grid; grid-template-columns: 1000px 1fr; gap: 64px; align-items: start; }
+.mover svg { display: block; width: 1000px; height: 620px; }
+.mover-txt { font-size: 28px; line-height: 1.35; }
+.mover-txt p + p { margin-top: 22px; }
+.mover-txt p.fragment { display: grid; grid-template-columns: 40px 1fr; }
+.mover-txt .n { font-weight: 700; color: var(--accent-text); }
+.mover-txt .code { font-size: 24px; padding: 12px 18px; margin-bottom: 8px; }
+.dma path { stroke-dasharray: 18 12; }
+.slide.active .dma.visible path { animation: flow .8s linear infinite; }
+
+/* Barra de lo que ocupa la RAM */
+.ramstack { display: flex; height: 120px; border: 3px solid var(--ink); overflow: hidden; }
+.rs-seg { height: 100%; }
+.rs-labels { display: flex; margin-top: 16px; font-size: 26px; line-height: 1.3; }
+.rs-labels > div { padding-right: 16px; }
+
+/* Salida de terminal */
+.term-out { font: 26px/1.5 var(--f-mono); background: #1A1A1A; color: #E8E8E8; padding: 24px 30px; margin-top: 36px; white-space: pre; }
+
+/* Pasos numerados junto a un diagrama */
+.mover-txt p.step-p { display: grid; grid-template-columns: 40px 1fr; }
+
+/* Línea de tiempo CPU / GPU */
+.tl + .tl { margin-top: 40px; }
+.tl-h { display: flex; justify-content: space-between; font: 600 32px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.tl-h span { font: 700 30px/1.2 var(--f-text); color: var(--accent-text); }
+.lane { display: grid; grid-template-columns: 220px 1fr; align-items: center; margin: 8px 0; }
+.lane-name { font-size: 26px; color: var(--muted); }
+.lane-track { position: relative; height: 46px; background: #E9E9E9; }
+.blk { position: absolute; top: 0; height: 46px; display: flex; align-items: center; justify-content: center; font: 600 24px/1 var(--f-text); color: #FFFFFF; opacity: 0; transform-origin: left center; }
+.blk.cpu { background: var(--accent); }
+.blk.gpu { background: var(--blue); }
+@keyframes blk { from { opacity: 0; transform: scaleX(.15); } to { opacity: 1; transform: none; } }
+.tl.visible .blk { animation: blk .35s ease-out both; animation-delay: var(--d); }
+body.overview .blk, .speaker .blk { opacity: 1; animation: none !important; }
+@media print { .blk { opacity: 1 !important; animation: none !important; } }
+
+/* num_workers */
+.wk { position: relative; }
+.wk-line { position: absolute; top: -6px; bottom: -6px; left: 1208px; border-left: 3px dashed var(--accent); z-index: 1; }
+.wk-line span { position: absolute; top: -40px; left: -110px; white-space: nowrap; font: 700 24px/1 var(--f-text); color: var(--accent-text); }
+
+/* Paneles de terminal */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.panel-cap { font-size: 26px; color: var(--muted); margin: 0 0 10px !important; }
+
+/* Carriles PCIe */
+.lanes path { stroke-dasharray: 14 10; }
+.slide.active .lanes.visible path { animation: flow .8s linear infinite; }
+.pipe-bar.hot { background: var(--accent); }
+
+/* VRAM */
+.vram-svg { display: block; width: 1664px; height: 540px; }
+.act-blocks { display: flex; gap: 4px; padding: 6px 4px; background: #FFFFFF; }
+.act-blocks div { flex: 1; background: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 24px 48px; margin-top: 24px; font-size: 26px; line-height: 1.3; }
+.legend > div { display: flex; align-items: flex-start; gap: 12px; }
+.formula-big { font: 600 34px/1.3 var(--f-mono); }
+
+/* ===== v8: componentes nuevos ===== */
+.fragment { transition-delay: var(--dl, 0s); }
+.fragment.play { opacity: 1; transform: none; }
+
+/* Etapas del núcleo */
+.lane-s { margin: 6px 0; }
+.lane-s .lane-track, .lane-s .blk { height: 40px; }
+.blk.s1 { background: var(--slate); }
+.blk.s2 { background: var(--blue); }
+.blk.s3 { background: var(--accent); }
+.blk.s4 { background: var(--navy); }
+.stage-key { display: flex; flex-wrap: wrap; gap: 12px 36px; font-size: 26px; margin-top: 26px !important; }
+.stage-key span { display: inline-flex; align-items: center; gap: 10px; }
+.stage-key i { display: inline-block; width: 24px; height: 24px; }
+
+/* Esperando un dato de la RAM */
+@property --c { syntax: '<integer>'; inherits: true; initial-value: 0; }
+.wait-row { display: grid; grid-template-columns: 300px 1fr 300px; align-items: center; margin-top: 30px; }
+.w-box { height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 3px solid var(--ink); background: var(--soft); }
+.w-box b { font: 600 48px/1.1 var(--f-head); }
+.w-box span { font-size: 28px; color: var(--muted); }
+.w-track { position: relative; height: 6px; background: var(--line); margin: 0 30px; }
+.w-dot { position: absolute; right: 0; top: -27px; width: 60px; height: 60px; background: var(--accent); }
+@keyframes travel { to { transform: translateX(-944px); } }
+.slide.active .play.visible .w-dot { animation: travel 2.5s linear both; }
+.cyc-row { display: flex; align-items: baseline; justify-content: center; gap: 28px; margin-top: 56px; }
+.cyc { font: 700 120px/1 var(--f-mono); color: var(--accent-text); min-width: 300px; text-align: right; }
+.cyc::before { counter-reset: c var(--c); content: counter(c); }
+@keyframes count { from { --c: 0; } to { --c: 400; } }
+.slide.active .play.visible .cyc { animation: count 2.5s linear both; }
+.cyc-l { font-size: 36px; }
+body.overview .cyc, .speaker .cyc { --c: 400; animation: none !important; }
+@media print { .cyc { --c: 400; animation: none !important; } .w-dot { transform: translateX(-944px); } }
+
+/* Anillos de caché */
+.mover.rings { grid-template-columns: 760px 1fr; }
+.mover.rings svg { width: 760px; height: 620px; }
+
+/* Acierto y fallo */
+.hm { display: grid; grid-template-columns: 220px repeat(5, 1fr); gap: 20px 24px; align-items: center; }
+.hm-box { position: relative; height: 150px; display: flex; justify-content: center; padding-top: 16px; border: 3px solid var(--ink); background: var(--soft); font: 600 40px/1 var(--f-head); }
+.hm-core { align-items: center; padding-top: 0; background: var(--navy); border-color: var(--navy); color: #FFFFFF; }
+.hm-ram { background: var(--slate); border-color: var(--slate); color: #FFFFFF; }
+.hm-copy { position: absolute; left: 50%; bottom: 18px; width: 56px; height: 40px; margin-left: -28px; background: var(--accent); }
+.hm-lbl { font-weight: 600; }
+.hm-tag { text-align: center; font-weight: 600; padding: 12px 0; }
+.hm-tag.miss { color: var(--muted); background: #ECECEC; }
+.hm-tag.hit { color: #FFFFFF; background: var(--accent); }
+.hm-time { grid-column: 2 / -1; font-size: 30px; color: var(--muted); }
+.hm-time.r2 { grid-column: 4 / -1; }
+
+/* Líneas de 64 bytes */
+.ln { display: grid; grid-template-columns: 110px 1fr; row-gap: 12px; align-items: center; margin-top: 8px; }
+.ln-lbl { font-weight: 600; }
+.ln-strip { display: grid; grid-template-columns: repeat(32, 1fr); gap: 3px; }
+.ln-c { position: relative; height: 60px; display: flex; align-items: center; justify-content: center; background: #F6EFE6; border: 1px solid var(--line); font: 500 24px/1 var(--f-mono); }
+.ln-c:nth-child(n+17) { background: #EEF2F6; }
+.ln-miss, .ln-hit { position: absolute; inset: 0; }
+.ln-miss { border: 4px solid var(--accent); background: rgba(217, 105, 42, .3); }
+.ln-hit { background: rgba(45, 106, 159, .5); }
+.ln-brk { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.ln-brk span { border-top: 3px solid var(--ink); text-align: center; font-size: 24px; color: var(--muted); padding-top: 6px; }
+.ln-cache { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; min-height: 60px; outline: 2px dashed var(--line); }
+.ln-slot { height: 60px; display: flex; align-items: center; justify-content: center; background: var(--blue-soft); border: 2px solid var(--blue); font: 600 26px/1 var(--f-mono); }
+.ln-slot.pre { background: var(--accent-soft); border-color: var(--accent); }
+.ln-steps { margin-top: 40px; }
+.ln-steps p + p { margin-top: 14px; }
+
+/* Por filas vs. por columnas */
+.rc { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+.rc-h { font: 600 34px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.rc-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.rc-grid i { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--soft); border: 1px solid var(--line); font: 500 24px/1 var(--f-mono); font-style: normal; }
+.rc-grid b, .rc-mem b { position: absolute; inset: 0; background: rgba(217, 105, 42, .6); }
+.rc-mem-l { font-size: 24px; color: var(--muted); margin: 14px 0 6px !important; }
+.rc-mem { display: grid; grid-template-columns: repeat(48, 1fr); gap: 1px; }
+.rc-mem i { position: relative; height: 26px; background: var(--soft); border: 1px solid var(--line); }
+.rc-cap { margin-top: 12px !important; font-weight: 600; }
+.race-row.rc-race { grid-template-columns: 220px 1fr 140px; }
+.race-row.pc-race { grid-template-columns: 460px 1fr 170px; }
+
+/* Swap */
+.swap { display: grid; grid-template-columns: 1fr 220px 1fr; gap: 24px; align-items: center; }
+.sw-title { font: 600 34px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.sw-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; min-height: 344px; padding: 14px; border: 3px solid var(--ink); background: var(--soft); }
+.sw-blk { position: relative; height: 66px; display: flex; align-items: center; justify-content: center; background: var(--blue); color: #FFFFFF; font-weight: 600; }
+.sw-blk.out { background: var(--slate); }
+.sw-ghost { position: absolute; inset: 0; background: #FFFFFF; border: 3px dashed var(--slate); }
+.sw-mid { text-align: center; color: var(--muted); font-size: 26px; }
+.sw-arrow { font: 600 72px/1 var(--f-mono); color: var(--accent); }
+
+/* DRAM */
+.dram-wrap { display: grid; grid-template-columns: 900px 1fr; gap: 64px; align-items: start; }
+.dram-fig { position: relative; padding: 8px 0 0 8px; }
+.dram, .dram-buf { display: grid; grid-template-columns: repeat(16, 48px); gap: 8px; }
+.dram i, .dram-buf i { width: 48px; height: 48px; border: 3px solid var(--slate); background: #FFFFFF; }
+.dram i.on, .dram-buf i.on { background: var(--blue); border-color: var(--blue); }
+.dram-row { position: absolute; left: 0; top: 112px; width: 904px; height: 64px; border: 4px solid var(--accent); }
+.dram-sweep { position: absolute; left: 0; top: 0; width: 904px; height: 64px; background: rgba(217, 105, 42, .22); }
+@keyframes sweep { from { transform: translateY(0); } to { transform: translateY(392px); } }
+.slide.active .dram-sweep.visible { animation: sweep 2.4s linear infinite; }
+.dram-cap { font-size: 24px; color: var(--muted); margin: 24px 0 8px !important; }
+.dram-buf { width: 904px; margin-left: -8px; padding: 6px; border: 3px solid var(--accent); }
+@media print { .dram-sweep { display: none; } }
+body.overview .dram-sweep, .speaker .dram-sweep { animation: none !important; }
+
+/* Bus de memoria y gráfico final */
+.bus-svg { display: block; width: 1664px; height: 560px; }
+.sum-svg { display: block; width: 1664px; height: 690px; }
+
+/* ¿Por qué tantos archivos son más lentos? */
+.osw { display: grid; grid-template-columns: 760px 1fr; gap: 64px; align-items: start; }
+.os { border: 3px solid var(--navy); }
+.os-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: var(--navy); color: #FFFFFF; font: 600 34px/1.2 var(--f-head); }
+.os-load { display: flex; align-items: center; gap: 12px; font: 500 24px/1 var(--f-text); }
+.os-meter { width: 180px; height: 22px; background: #3A4D5C; }
+.os-meter i { display: block; height: 100%; width: 8%; background: var(--accent-bright); transition: width 2.5s ease; }
+.os.visible .os-meter i { width: 96%; }
+.os-cap { font-size: 26px; color: var(--muted); padding: 14px 22px 4px; }
+.os-steps { position: relative; padding: 0 22px; }
+.os-steps p { position: relative; height: 54px; display: flex; align-items: center; padding: 0 14px; font-size: 28px; border-bottom: 1px solid var(--line); z-index: 1; }
+.os-steps p.useful { background: var(--blue-soft); font-weight: 600; }
+.os-hl { position: absolute; left: 22px; right: 22px; top: 0; height: 54px; background: rgba(217, 105, 42, .35); opacity: 0; }
+@keyframes oshl { to { transform: translateY(378px); } }
+.slide.active .os.visible .os-hl { opacity: 1; animation: oshl .84s steps(7, end) infinite; }
+.os-count { padding: 18px 22px 20px; font-size: 30px; }
+.fcount { font: 700 44px/1 var(--f-mono); color: var(--accent-text); }
+.fcount::before { counter-reset: c var(--c); content: counter(c); }
+@keyframes countf { from { --c: 0; } to { --c: 100000; } }
+.slide.active .os.visible .fcount { animation: countf 12s linear both; }
+body.overview .fcount, .speaker .fcount { --c: 100000; animation: none !important; }
+body.overview .os-hl, .speaker .os-hl { animation: none !important; }
+@media print { .fcount { --c: 100000; animation: none !important; } .os-hl { display: none; } .os-meter i { width: 96%; } }
+.ov-h { display: flex; justify-content: space-between; align-items: baseline; font: 600 30px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.ov-h span { font: 600 24px/1.2 var(--f-text); color: var(--accent-text); }
+.ov-track { height: 64px; background: var(--soft); margin-bottom: 40px; }
+.ov-bar { height: 100%; width: 100%; }
+.ov-bar.one { background: linear-gradient(to right, var(--accent) 0 8px, var(--blue) 8px); }
+.ov-bar.many { background: repeating-linear-gradient(to right, var(--accent) 0 15px, var(--blue) 15px 21px); }
+@keyframes ovgrow { from { width: 0; } }
+.slide.active .ovg.visible .ov-bar { animation: ovgrow 2s linear both; }
+.ov-key { display: flex; gap: 36px; font-size: 26px; }
+.ov-key span { display: inline-flex; align-items: center; gap: 10px; }
+.ov-key i { display: inline-block; width: 24px; height: 24px; }
+.ov-txt { margin-top: 48px !important; }
+
+/* La caja vs. la copia real */
+.cj-track { display: flex; align-items: center; height: 60px; padding: 4px; border: 2px dashed var(--slate); }
+.cj-track .pipe-bar { height: 48px; }
+.pipe-bar.cj-ext { background: var(--blue-soft); }
+
+/* Acceso secuencial y aleatorio */
+.ra-h { font: 600 32px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.ra-strip { display: grid; grid-template-columns: repeat(24, 60px); gap: 6px; }
+.ra-c { position: relative; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--soft); border: 1px solid var(--line); font: 500 24px/1 var(--f-mono); }
+.ra-on { position: absolute; inset: 0; background: rgba(217, 105, 42, .55); }
+.ra-cap { margin-top: 12px !important; color: var(--muted); }
+.ra-svg { display: block; width: 1584px; height: 110px; margin-bottom: -6px; }
+.ra-arc { fill: none; stroke: var(--accent); stroke-width: 4; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .45s ease, opacity .2s ease; transition-delay: var(--dl, 0s); }
+.ra-arc.visible { stroke-dashoffset: 0; transform: none; }
+.ra-cost { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; margin-top: 22px; border-top: 2px solid var(--line); padding-top: 22px; }
+.ra-dev { font-weight: 600; }
+.ra-n { font: 700 48px/1.1 var(--f-mono); color: var(--accent-text); margin: 4px 0 !important; }
+.ra-why { font-size: 26px; color: var(--muted); }
+body.overview .ra-arc, .speaker .ra-arc { stroke-dashoffset: 0; }
+@media print { .ra-arc { stroke-dashoffset: 0; } }
+
+/* Acceso aleatorio: disco duro vs. SSD */
+.rand2 { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+.r2-h { font: 600 32px/1.2 var(--f-head); margin: 0 0 10px !important; }
+.r2-svg { display: block; width: 680px; height: 447px; }
+.r2-t { font-size: 28px; margin-top: 12px !important; }
+.r2-t .ms { font: 700 44px/1 var(--f-mono); color: var(--accent-text); }
+.ms60::before { counter-reset: c var(--c); content: counter(c); }
+.ms60 { --c: 60; }
+@keyframes c60 { 0% { --c: 0; } 66.67%, 100% { --c: 60; } }
+.slide.active .rand2 .ms60 { animation: c60 9s steps(6, end) infinite; }
+.hd-arm { transform-box: view-box; transform-origin: 640px 450px; transform: rotate(2deg); }
+@keyframes hdseek {
+  0.00% { transform: rotate(0deg); }
+  4.44% { transform: rotate(-8deg); }
+  11.11% { transform: rotate(-8deg); }
+  15.56% { transform: rotate(12deg); }
+  22.22% { transform: rotate(12deg); }
+  26.67% { transform: rotate(-4deg); }
+  33.33% { transform: rotate(-4deg); }
+  37.78% { transform: rotate(6deg); }
+  44.44% { transform: rotate(6deg); }
+  48.89% { transform: rotate(-12deg); }
+  55.56% { transform: rotate(-12deg); }
+  60.00% { transform: rotate(2deg); }
+  95.56% { transform: rotate(2deg); }
+  100.00% { transform: rotate(0deg); }
+}
+.slide.active .rand2 .hd-arm { animation: hdseek 9s linear infinite; }
+.hd-ring { fill: none; stroke: var(--accent); stroke-width: 6; }
+@keyframes ring1 { 0%, 4.04% { opacity: 0; } 4.44%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r1 { animation: ring1 9s linear infinite; }
+@keyframes ring2 { 0%, 15.16% { opacity: 0; } 15.56%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r2 { animation: ring2 9s linear infinite; }
+@keyframes ring3 { 0%, 26.27% { opacity: 0; } 26.67%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r3 { animation: ring3 9s linear infinite; }
+@keyframes ring4 { 0%, 37.38% { opacity: 0; } 37.78%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r4 { animation: ring4 9s linear infinite; }
+@keyframes ring5 { 0%, 48.49% { opacity: 0; } 48.89%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r5 { animation: ring5 9s linear infinite; }
+@keyframes ring6 { 0%, 59.60% { opacity: 0; } 60.00%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .r6 { animation: ring6 9s linear infinite; }
+.rand2 .lanes path { animation: none; }
+.slide.active .rand2 .lanes path { animation: flow .8s linear infinite; }
+@keyframes tokfly {
+  0%, 3.3% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+  3.6% { opacity: 1; transform: translate(var(--dx), var(--dy)); }
+  8.5%, 95.5% { opacity: 1; transform: none; }
+  97%, 100% { opacity: 0; transform: none; }
+}
+.slide.active .rand2 .tok { animation-name: tokfly; animation-duration: 9s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes ssdok { 0%, 10% { opacity: 0; } 11.5%, 95.5% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.slide.active .rand2 .ssd-done { animation: ssdok 9s linear infinite; }
+body.overview .rand2 *, .speaker .rand2 * { animation: none !important; }
+@media print { .rand2 * { animation: none !important; } }
+
+/* El sistema operativo entre el programa y el NVMe */
+.osn { position: relative; }
+.osn-m { position: absolute; }
+.osn .mb { display: none; }
+.osn-m.visible ~ * .ma { display: none; }
+.osn-m.visible ~ * .mb { display: inline; }
+.osn-mode { font-size: 32px; color: var(--muted); margin: -12px 0 22px !important; }
+.osn-mode b { color: var(--ink); }
+.osn-prog { display: flex; justify-content: space-between; align-items: center; height: 80px; padding: 0 28px; border: 3px solid var(--ink); background: var(--soft); font: 600 30px/1 var(--f-head); }
+.osn-cnt { font: 400 28px/1 var(--f-text); }
+.osn-cnt b { font: 700 40px/1 var(--f-mono); color: var(--accent-text); }
+.osn-c::before { counter-reset: c var(--c); content: counter(c); }
+.osn-c { --c: 1; }
+@keyframes osncnt { from { --c: 1; } to { --c: 49; } }
+.slide.active .osn-m.visible ~ * .osn-c { animation: osncnt 60s steps(48, end) forwards; }
+.osn-link { display: block; width: 1664px; height: 70px; }
+.osn-f { stroke-dasharray: 12 8; }
+.slide.active .osn-f { animation: flow .8s linear infinite; }
+.slide.active .osn-data { animation-duration: .3s; }
+.osn-os { background: var(--navy); color: #FFFFFF; padding: 22px 28px 28px; }
+.osn-head { display: flex; justify-content: space-between; align-items: center; font: 600 34px/1 var(--f-head); margin-bottom: 22px; }
+.osn-load { display: flex; align-items: center; gap: 14px; font: 400 26px/1 var(--f-text); }
+.osn-w { display: inline-block; min-width: 150px; font-weight: 700; }
+.osn-meter { display: block; width: 280px; height: 24px; background: rgba(255, 255, 255, .2); }
+.osn-meter i { display: block; height: 100%; width: var(--w, 0%); background: var(--accent-bright); transition: width 1.2s ease; }
+.slide.active .osn-os .osn-meter i { --w: 15%; }
+.slide.active .osn-nvme .osn-meter i { --w: 100%; }
+.slide.active .osn-m.visible ~ .osn-os .osn-meter i { --w: 100%; }
+.slide.active .osn-m.visible ~ .osn-nvme .osn-meter i { --w: 6%; }
+.osn-steps { position: relative; display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr 44px 1fr 44px 1fr; align-items: center; }
+.osn-steps > span { text-align: center; font-size: 30px; color: #8FA3B5; }
+.st { height: 150px; padding: 16px 18px; border: 2px solid #3E5163; background: #1F3142; font-size: 26px; line-height: 1.25; }
+.st b { display: block; font: 700 30px/1 var(--f-mono); color: var(--accent-bright); margin-bottom: 10px; }
+.osn-cur { position: absolute; left: 0; top: 0; z-index: 1; width: calc((100% - 176px) / 5); height: 150px; border: 6px solid var(--accent-bright); background: rgba(232, 128, 63, .18); opacity: 0; }
+@keyframes osncurA {
+  0% { transform: translateX(0); } 25% { transform: translateX(calc(100% + 44px)); }
+  50% { transform: translateX(calc(2 * (100% + 44px))); } 75%, 100% { transform: translateX(calc(3 * (100% + 44px))); }
+}
+@keyframes osncurB { from { transform: translateX(0); } to { transform: translateX(calc(5 * (100% + 44px))); } }
+.slide.active .osn-cur { opacity: 1; animation: osncurA 1.8s steps(1, end) .4s both; }
+.slide.active .osn-m.visible ~ .osn-os .osn-cur { animation: osncurB 1.25s steps(5, end) infinite; }
+@keyframes osnpulse { 0%, 58% { opacity: .12; } 60%, 80% { opacity: 1; } 82%, 100% { opacity: .12; } }
+.slide.active .osn-m.visible ~ .osn-low .osn-pulse { animation: osnpulse 1.25s linear infinite; }
+.osn-nvme { display: flex; justify-content: space-between; align-items: center; height: 90px; padding: 0 28px; background: var(--blue); color: #FFFFFF; font: 600 30px/1 var(--f-head); }
+body.overview .osn *, .speaker .osn * { animation: none !important; transition: none !important; }
+body.overview .osn-m ~ * .ma { display: none; }
+body.overview .osn-m ~ * .mb { display: inline; }
+body.overview .osn-os .osn-meter i { --w: 100%; }
+body.overview .osn-nvme .osn-meter i { --w: 6%; }
+@media print {
+  .osn * { animation: none !important; transition: none !important; }
+  .osn-m ~ * .ma { display: none; }
+  .osn-m ~ * .mb { display: inline; }
+  .osn-os .osn-meter i { --w: 100%; }
+  .osn-nvme .osn-meter i { --w: 6%; }
+  .osn-c { --c: 37; }
+}
+
+/* Cómo guarda un bit la RAM */
+.bt { position: relative; display: grid; grid-template-columns: 560px 1fr; gap: 56px; }
+.bt-m1, .bt-m2 { position: absolute; }
+.bt-h { font: 600 30px/1.2 var(--f-head); margin: 0 0 18px !important; }
+.bt-legend { display: flex; gap: 56px; margin-bottom: 34px; }
+.bt-legend p { margin: 10px 0 0 !important; font-size: 26px; color: var(--muted); }
+.bt-legend p span { font: 700 40px/1 var(--f-mono); color: var(--ink); margin-right: 10px; }
+.bt-big { position: relative; display: block; width: 120px; height: 120px; border: 4px solid var(--navy); overflow: hidden; }
+.bt-big b, .bt-row i b { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: var(--blue); transform-origin: 50% 100%; }
+.bt-steps { margin: 0; padding: 0 0 0 40px; font-size: 28px; line-height: 1.35; }
+.bt-steps li { margin-bottom: 18px; }
+.bt-steps li::marker { font-weight: 700; color: var(--accent-text); }
+.bt-right { position: relative; height: 640px; }
+.bt-grid { position: absolute; top: 50px; left: 0; width: 776px; height: 440px; }
+.bt-row { display: flex; gap: 8px; height: 48px; margin-bottom: 8px; }
+.bt-row i { position: relative; display: block; width: 48px; height: 48px; border: 2px solid #5F6E7D; overflow: hidden; background: #FFFFFF; }
+.bt-buf-h { position: absolute; top: 504px; left: 0; margin: 0 !important; font-size: 26px; color: var(--muted); }
+.bt-buf { position: absolute; top: 540px; left: 0; margin: 0; }
+.bt-buf i { border-style: dashed; }
+.bt-copy { position: absolute; z-index: 2; left: 0; top: 112px; margin: 0; opacity: 0; }
+.bt-rowsel { position: absolute; left: -7px; top: 105px; width: 790px; height: 62px; border: 4px solid var(--accent); opacity: 0; }
+.bt-rowsel span, .bt-sweep span { position: absolute; left: 806px; top: 12px; white-space: nowrap; font: 700 26px/1 var(--f-text); color: var(--accent-text); }
+.bt-colsel { position: absolute; z-index: 3; left: 273px; top: 533px; width: 62px; height: 62px; border: 4px solid var(--accent); opacity: 0; }
+.bt-out { position: absolute; left: 280px; top: 598px; margin: 0 !important; font-size: 28px; opacity: 0; white-space: nowrap; }
+.bt-out b { font: 700 36px/1 var(--f-mono); color: var(--accent-text); }
+.bt-sweep { position: absolute; left: -7px; top: -4px; width: 790px; height: 56px; background: rgba(232, 128, 63, .28); opacity: 0; }
+/* Clic 1: leer una fila */
+@keyframes btcopy { 0%, 30% { opacity: 1; transform: none; } 75%, 100% { opacity: 1; transform: translateY(378px); } }
+@keyframes btshow { from { opacity: 1; } to { opacity: 1; } }
+.slide.active .bt-m1.visible ~ .bt-right .bt-rowsel { opacity: 1; transition: opacity .3s ease; }
+.slide.active .bt-m1.visible ~ .bt-right .bt-copy { animation: btcopy 1.6s ease-in-out .3s forwards; }
+.slide.active .bt-m1.visible ~ .bt-right .bt-colsel { opacity: 1; transition: opacity .3s ease 2s; }
+.slide.active .bt-m1.visible ~ .bt-right .bt-out { opacity: 1; transition: opacity .3s ease 2.3s; }
+/* Clic 2: la carga se escapa y el refresco la repone fila por fila */
+@keyframes btleak { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
+@keyframes btsweep { from { transform: translateY(0); } to { transform: translateY(448px); } }
+.slide.active .bt-m2.visible ~ .bt-right .bt-grid > .bt-row:not(.bt-copy) b { animation: btleak 4s linear infinite; animation-delay: calc(var(--r) * .5s - 4s); }
+.slide.active .bt-m2.visible ~ .bt-left .bt-big1 b { animation: btleak 4s linear infinite; }
+.slide.active .bt-m2.visible ~ .bt-right .bt-sweep { opacity: 1; animation: btsweep 4s steps(8, end) infinite; }
+.slide.active .bt-m2.visible ~ .bt-right .bt-rowsel span { opacity: 0; }
+/* Vista general, presentador e impresión: estado final sin animación */
+body.overview .bt *, .speaker .bt * { animation: none !important; transition: none !important; }
+body.overview .bt-rowsel, body.overview .bt-colsel, body.overview .bt-out, body.overview .bt-copy { opacity: 1; }
+body.overview .bt-copy { transform: translateY(378px); }
+@media print {
+  .bt * { animation: none !important; transition: none !important; }
+  .bt-rowsel, .bt-colsel, .bt-out, .bt-copy { opacity: 1; }
+  .bt-copy { transform: translateY(378px); }
+}
+
+/* Tipos de RAM */
+.rt-row { display: grid; grid-template-columns: 720px 1fr; gap: 56px; align-items: center; margin-bottom: 30px; }
+.rt-svg { display: block; width: 720px; height: 160px; }
+.rt-h { font: 600 32px/1.2 var(--f-head); margin: 0 0 8px !important; }
+.rt-d { font-size: 28px; line-height: 1.35; margin: 0 !important; }
+.rt-bars { display: grid; grid-template-columns: 170px 1fr; gap: 8px 16px; align-items: center; margin-top: 14px; }
+.rt-bars p { margin: 0 !important; font-size: 24px; color: var(--muted); }
+.rt-bars .rt-v { font: 700 26px/1 var(--f-mono); color: var(--accent-text); white-space: nowrap; }
+.rt-bar { display: flex; align-items: center; gap: 14px; height: 26px; }
+.rt-bar i { display: block; flex: none; height: 100%; width: var(--w); background: var(--navy); }
+@keyframes rtgrow { from { width: 0; } to { width: var(--w); } }
+.slide.active .rt-bar i { animation: rtgrow 1.4s cubic-bezier(.2, .7, .2, 1) .3s both; }
+@keyframes rtbit { 0%, 25% { fill: #FFFFFF; } 28%, 62% { fill: var(--accent-bright); } 65%, 100% { fill: #FFFFFF; } }
+@keyframes rtecc { 0%, 40% { fill: var(--accent); } 44%, 58% { fill: #F6B48A; } 62%, 100% { fill: var(--accent); } }
+.slide.active .rt-ecc.visible .rt-bit { animation: rtbit 3s linear infinite; }
+.slide.active .rt-ecc.visible .rt-eccchip { animation: rtecc 3s linear infinite; }
+body.overview .rt-row *, .speaker .rt-row * { animation: none !important; }
+@media print { .rt-row * { animation: none !important; } }
+
+/* Qué es una instrucción */
+.in { display: grid; grid-template-columns: 1040px 1fr; gap: 72px; }
+.in-cap { font-size: 26px; color: var(--muted); margin: 0 0 10px !important; }
+.in-code { display: inline-block; font: 500 36px/1 var(--f-mono); background: var(--soft); border-left: 6px solid var(--accent); padding: 18px 24px; margin: 0 0 28px !important; }
+.in-res { font-weight: 700; color: var(--accent-text); margin-left: 20px; }
+.in-list { position: relative; }
+.in-list p { display: grid; grid-template-columns: 44px 380px 1fr; align-items: center; height: 54px; margin: 0 !important; border-bottom: 1px solid var(--line); font-size: 30px; }
+.in-n { font: 700 26px/1 var(--f-mono); color: var(--accent-text); }
+.in-list code { font: 400 24px/1 var(--f-mono); color: var(--muted); }
+.in-frame { position: absolute; top: -8px; bottom: -8px; left: 412px; right: 0; border: 4px solid var(--accent); }
+.in-regs p { display: grid; grid-template-columns: 80px 220px; height: 52px; margin: 0 0 8px !important; }
+.in-regs span { display: flex; align-items: center; justify-content: center; background: var(--navy); color: #FFFFFF; font: 700 28px/1 var(--f-mono); }
+.in-regs .in-v { background: #FFFFFF; color: var(--ink); border: 3px solid var(--navy); border-left: 0; font-size: 32px; }
+
+/* Control, registros y ALU */
+.ex-svg { display: block; width: 1664px; height: 500px; }
+.ex-alu { fill: var(--accent); }
+.ex-ti { transform: translate(1070px, 124px); }
+.ex-va, .ex-vb, .ex-vr { opacity: 0; }
+@keyframes exti { 0%, 4% { transform: translate(180px, 214px); } 17%, 100% { transform: translate(1070px, 124px); } }
+@keyframes exsig { 0%, 20% { opacity: .3; } 22%, 38% { opacity: 1; } 40%, 100% { opacity: .3; } }
+@keyframes exva { 0%, 40% { opacity: 0; transform: translate(740px, 272px); } 41% { opacity: 1; transform: translate(740px, 272px); } 52% { opacity: 1; transform: translate(900px, 272px); } 55%, 100% { opacity: 0; transform: translate(900px, 272px); } }
+@keyframes exvb { 0%, 40% { opacity: 0; transform: translate(740px, 320px); } 41% { opacity: 1; transform: translate(740px, 320px); } 44.5% { transform: translate(820px, 320px); } 48% { transform: translate(820px, 430px); } 52% { opacity: 1; transform: translate(900px, 430px); } 55%, 100% { opacity: 0; transform: translate(900px, 430px); } }
+@keyframes exalu { 0%, 51% { fill: var(--accent); } 53%, 59% { fill: #F29A5E; } 61%, 100% { fill: var(--accent); } }
+@keyframes exvr { 0%, 60% { opacity: 0; transform: translate(1030px, 360px); } 61% { opacity: 1; transform: translate(1030px, 360px); } 62.3% { transform: translate(1080px, 360px); } 65.8% { transform: translate(1080px, 492px); } 73% { transform: translate(800px, 492px); } 76.5% { transform: translate(800px, 368px); } 78% { opacity: 1; transform: translate(740px, 368px); } 80%, 100% { opacity: 0; transform: translate(740px, 368px); } }
+@keyframes exr3 { 0%, 78% { opacity: 0; } 79%, 97% { opacity: 1; } 100% { opacity: 0; } }
+.slide.active .ex-ti { animation: exti 7s ease-in-out infinite; }
+.slide.active .ex-sig { animation: exsig 7s linear infinite; }
+.slide.active .ex-va { animation: exva 7s linear infinite; }
+.slide.active .ex-vb { animation: exvb 7s linear infinite; }
+.slide.active .ex-alu { animation: exalu 7s linear infinite; }
+.slide.active .ex-vr { animation: exvr 7s linear infinite; }
+.slide.active .ex-r3 { animation: exr3 7s linear infinite; }
+.ex-caps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 18px; }
+.ex-cap { font-size: 24px; line-height: 1.3; margin: 0 !important; padding-top: 12px; border-top: 8px solid var(--c); }
+.ex-cap b { display: block; font: 600 28px/1.2 var(--f-head); margin-bottom: 4px; }
+@keyframes excap { 0%, 19.9% { opacity: 1; } 20%, 100% { opacity: .3; } }
+.slide.active .ex-cap { opacity: .3; animation: excap 7s linear infinite; }
+.slide.active .ex-cap:nth-child(2) { animation-delay: 1.4s; }
+.slide.active .ex-cap:nth-child(3) { animation-delay: 2.8s; }
+.slide.active .ex-cap:nth-child(4) { animation-delay: 4.2s; }
+
+/* SIMD */
+.sd-row { margin-bottom: 64px; }
+.sd-h { display: flex; justify-content: space-between; align-items: baseline; width: 1660px; font: 600 32px/1.2 var(--f-head); margin: 0 0 16px !important; }
+.sd-h code { font: 400 24px/1 var(--f-mono); color: var(--muted); margin-left: 16px; }
+.sd-cnt { font: 400 26px/1 var(--f-text); color: var(--muted); }
+.sd-cnt b { font: 700 44px/1 var(--f-mono); color: var(--accent-text); margin-right: 10px; }
+.sd-n1::before, .sd-n2::before { counter-reset: c var(--c); content: counter(c); }
+.sd-n1 { --c: 32; }
+.sd-n2 { --c: 4; }
+.sd-strip { position: relative; display: flex; gap: 4px; width: 1660px; }
+.sd-strip i { display: block; flex: none; width: 48px; height: 48px; }
+.sd-done { position: absolute; left: 0; top: 0; height: 48px; width: 1664px; background: repeating-linear-gradient(90deg, rgba(217, 105, 42, .88) 0 48px, transparent 48px 52px); }
+.sd-cur { position: absolute; top: -8px; left: -8px; height: 64px; border: 4px solid var(--navy); opacity: 0; }
+.sd-c1 { width: 64px; }
+.sd-c2 { width: 428px; }
+@keyframes sdd1 { 0% { width: 0; animation-timing-function: steps(32, end); } 80%, 100% { width: 1664px; } }
+@keyframes sdd2 { 0% { width: 0; animation-timing-function: steps(4, end); } 10%, 100% { width: 1664px; } }
+@keyframes sdc1 { 0% { opacity: 1; transform: translateX(0); animation-timing-function: steps(32, end); } 80% { opacity: 1; transform: translateX(1664px); } 80.1%, 100% { opacity: 0; transform: translateX(0); } }
+@keyframes sdc2 { 0% { opacity: 1; transform: translateX(0); animation-timing-function: steps(4, end); } 10% { opacity: 1; transform: translateX(1664px); } 10.1%, 100% { opacity: 0; transform: translateX(0); } }
+@keyframes sdn1 { 0% { --c: 0; animation-timing-function: steps(32, end); } 80%, 100% { --c: 32; } }
+@keyframes sdn2 { 0% { --c: 0; animation-timing-function: steps(4, end); } 10%, 100% { --c: 4; } }
+.slide.active .sd-d1 { animation: sdd1 10s infinite; }
+.slide.active .sd-d2 { animation: sdd2 10s infinite; }
+.slide.active .sd-c1 { animation: sdc1 10s infinite; }
+.slide.active .sd-c2 { animation: sdc2 10s infinite; }
+.slide.active .sd-n1 { animation: sdn1 10s infinite; }
+.slide.active .sd-n2 { animation: sdn2 10s infinite; }
+
+/* SSE, AVX y NEON */
+.ve-row { margin-bottom: 18px; }
+.ve-h { font-size: 26px; color: var(--muted); margin: 0 0 8px !important; }
+.ve-h b { font: 600 32px/1.2 var(--f-head); color: var(--ink); margin-right: 16px; }
+.ve-lanes { display: flex; align-items: center; gap: 4px; }
+.ve-lanes i { display: block; flex: none; width: 56px; height: 44px; background: var(--blue); }
+.ve-neon .ve-lanes i { background: var(--accent); }
+.ve-lanes span { margin-left: 18px; font: 700 26px/1 var(--f-mono); color: var(--accent-text); white-space: nowrap; }
+.ve-code { font: 500 28px/1 var(--f-mono); background: var(--soft); padding: 2px 8px; }
+@keyframes vepop { from { opacity: 0; transform: scaleY(.2); } to { opacity: 1; transform: none; } }
+.slide.active .ve-lanes i { animation: vepop .3s ease-out both; animation-delay: calc(var(--r) * .5s + var(--i) * 50ms); }
+.slide.active .ve-lanes span { animation: vepop .3s ease-out both; animation-delay: calc(var(--r) * .5s + .9s); }
+
+body.overview .ex-svg *, .speaker .ex-svg *, body.overview .ex-cap, .speaker .ex-cap, body.overview .sd-strip *, .speaker .sd-strip *, body.overview .sd-cnt b, .speaker .sd-cnt b, body.overview .ve-lanes *, .speaker .ve-lanes * { animation: none !important; }
+body.overview .ex-cap, .speaker .ex-cap { opacity: 1; }
+@media print {
+  .ex-svg *, .ex-cap, .sd-strip *, .sd-cnt b, .ve-lanes * { animation: none !important; }
+  .ex-cap { opacity: 1 !important; }
+}
+
+/* Qué instrucciones tiene una CPU */
+.ci-cats p { display: grid; grid-template-columns: 330px 820px 1fr; align-items: center; height: 50px; margin: 0 !important; border-bottom: 1px solid var(--line); font-size: 28px; }
+.ci-cats b { font: 600 30px/1.2 var(--f-head); }
+.ci-cats code { font: 400 24px/1 var(--f-mono); color: var(--accent-text); }
+.ci { margin-top: 34px; }
+.ci-h { font: 600 30px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.ci-h span { font: 400 24px/1 var(--f-text); color: var(--muted); margin-left: 10px; }
+.ci-row { display: grid; grid-template-columns: 330px 1fr; align-items: center; height: 46px; }
+.ci-row p { margin: 0 !important; font-size: 26px; }
+.ci-bar { display: flex; align-items: center; gap: 14px; height: 30px; }
+.ci-bar i { display: block; flex: none; height: 30px; width: calc(var(--n) * 80px); background: var(--accent); }
+.ci-bar span { font-size: 24px; color: var(--muted); white-space: nowrap; }
+.ci-n { font: 700 30px/1 var(--f-mono); color: var(--accent-text); }
+.ci-n::before { counter-reset: c var(--c); content: counter(c); }
+.ci-n { --c: var(--n); }
+@keyframes cigrow { from { width: 0; } }
+@keyframes cicount { from { --c: 0; } to { --c: var(--n); } }
+.slide.active .ci.visible .ci-bar i { animation: cigrow calc(var(--n) * .25s) steps(var(--n), end) .3s both; }
+.slide.active .ci.visible .ci-n { animation: cicount calc(var(--n) * .25s) steps(var(--n), end) .3s both; }
+body.overview .ci *, .speaker .ci * { animation: none !important; }
+@media print { .ci * { animation: none !important; } }
+.in-note { font-size: 24px; line-height: 1.35; color: var(--muted); margin: 18px 0 0 !important; max-width: 520px; }
+.in-note b { color: var(--ink); }
+
+/* Qué es un ciclo */
+.ck { position: relative; }
+.ck-svg { display: block; width: 1664px; height: 200px; overflow: visible; }
+@keyframes ckwave { from { transform: translateX(0); } to { transform: translateX(-160px); } }
+.slide.active .ck-wave { animation: ckwave 1s linear infinite; }
+@keyframes cktick { 0%, 12% { r: 20px; fill: var(--accent-bright); } 25%, 100% { r: 12px; fill: var(--accent); } }
+.slide.active .ck-tick { animation: cktick 1s linear infinite; }
+.ck-cnt { position: absolute; right: 852px; top: 160px; margin: 0 !important; font-size: 26px; color: var(--muted); white-space: nowrap; }
+.ck-n { font: 700 36px/1 var(--f-mono); color: var(--accent-text); margin-left: 6px; }
+.ck-n::before { counter-reset: c var(--c); content: counter(c); }
+.ck-n { --c: 1; }
+@keyframes ckcount { from { --c: 1; } to { --c: 121; } }
+.slide.active .ck-n { animation: ckcount 120s steps(120, end) forwards; }
+.ck-h { font: 600 30px/1.2 var(--f-head); margin: 34px 0 14px !important; }
+.ck-stages { position: relative; display: grid; grid-template-columns: repeat(4, 380px); gap: 48px; }
+.ck-stages p { margin: 0 !important; height: 92px; display: flex; align-items: center; gap: 18px; padding: 0 22px; border-left: 12px solid var(--c); background: var(--soft); font-size: 30px; }
+.ck-stages b { font: 700 36px/1 var(--f-mono); color: var(--ink); }
+.ck-frame { position: absolute; z-index: 1; left: -8px; top: -8px; width: 396px; height: 108px; border: 6px solid var(--accent); }
+@keyframes ckframe { from { transform: translateX(0); } to { transform: translateX(1712px); } }
+.slide.active .ck-frame { animation: ckframe 4s steps(4, end) infinite; }
+body.overview .ck *, .speaker .ck * { animation: none !important; }
+@media print { .ck * { animation: none !important; } }
+
+/* ===== GPU ===== */
+.cg { display: grid; grid-template-columns: 800px 800px; gap: 64px; }
+.cg-h { font: 600 32px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.cg-h span { font: 400 26px/1 var(--f-text); color: var(--muted); margin-left: 12px; }
+.cg-svg { display: block; width: 800px; height: 460px; }
+.cg-key, .lh-key, .gc-key { display: flex; gap: 36px; margin-top: 16px !important; font-size: 24px; color: var(--muted); }
+.cg-key i, .lh-key i, .gc-key i { display: inline-block; width: 26px; height: 26px; margin-right: 10px; vertical-align: -5px; }
+.cg-pop { transform-box: fill-box; transform-origin: center; }
+@keyframes cgpop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+.slide.active .cg-pop { animation: cgpop .35s ease-out both; animation-delay: var(--d); }
+
+.gi { display: grid; grid-template-columns: 940px 660px; gap: 64px; align-items: start; }
+.gi-chip { display: block; width: 940px; height: 560px; }
+.gi-sm { display: block; width: 660px; height: 560px; }
+
+.wp { display: grid; grid-template-columns: 420px 1fr; gap: 64px; align-items: start; }
+.wp-list { position: relative; border: 2px solid var(--line); }
+.wp-list p { position: relative; z-index: 1; height: 62px; display: flex; align-items: center; padding: 0 24px; font-size: 30px; border-bottom: 1px solid var(--line); }
+.wp-list p:last-of-type { border-bottom: 0; }
+.wp-cur { position: absolute; left: 0; right: 0; top: 0; height: 62px; background: var(--accent-soft); border-left: 8px solid var(--accent); }
+@keyframes wpcur { from { transform: translateY(0); } to { transform: translateY(372px); } }
+.slide.active .wp-cur { animation: wpcur 7.2s steps(6, end) infinite; }
+.wp-warp { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+.wp-warp i { display: flex; align-items: flex-end; justify-content: flex-end; height: 82px; padding: 6px 8px; background: var(--navy); }
+.wp-warp span { font: 500 20px/1 var(--f-mono); color: #B9C4CE; }
+@keyframes wpflash { 0%, 30% { background: var(--accent); } 45%, 100% { background: var(--navy); } }
+.slide.active .wp-warp i { animation: wpflash 1.2s linear infinite; }
+.wp-code { font: 500 28px/1 var(--f-mono); background: var(--soft); padding: 2px 8px; }
+
+.lh-svg { display: block; width: 1664px; height: 400px; }
+.lh-mask { transform-box: fill-box; transform-origin: 100% 50%; }
+@keyframes lhmask { 0% { transform: scaleX(1); } 70%, 100% { transform: scaleX(0); } }
+.slide.active .lh-mask { animation: lhmask 9s linear infinite; }
+
+.gm-h { font: 600 30px/1.2 var(--f-head); margin: 0 0 10px !important; }
+.gm-row { display: grid; grid-template-columns: 300px 1fr; align-items: center; height: 50px; }
+.gm-row p { margin: 0 !important; font-size: 28px; }
+.gm-bar { display: flex; align-items: center; gap: 16px; }
+.gm-bar i { display: block; flex: none; height: 34px; width: var(--w); background: var(--blue); }
+.gm-bar span { font: 700 26px/1 var(--f-mono); color: var(--accent-text); white-space: nowrap; }
+@keyframes gmgrow { from { width: 0; } }
+.slide.active .gm-bar i { animation: gmgrow 1.2s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d); }
+
+.gc-row { display: grid; grid-template-columns: 400px 1110px 1fr; align-items: center; height: 74px; }
+.gc-row p { margin: 0 !important; font-size: 28px; }
+.gc-track { display: flex; height: 44px; background: var(--soft); }
+.gc-seg { display: block; flex: none; height: 44px; width: var(--w); }
+@keyframes gcgrow { from { width: 0; } }
+.slide.active .gc-seg { animation: gcgrow var(--t) linear both; animation-delay: var(--d); }
+.gc-t { text-align: right; font: 700 30px/1 var(--f-mono) !important; color: var(--accent-text); white-space: nowrap; }
+@keyframes gct { from { opacity: 0; } to { opacity: 1; } }
+.slide.active .gc-t { animation: gct .2s linear both; animation-delay: var(--d); }
+
+.tc { display: grid; grid-template-columns: 700px 1fr; gap: 80px; align-items: start; }
+.tc-left { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.tc-h { font: 600 28px/1.2 var(--f-head); margin: 0 0 14px !important; }
+.tc-h span { display: block; font: 400 22px/1.3 var(--f-text); color: var(--muted); margin-top: 4px; }
+.tc-grid { display: grid; grid-template-columns: repeat(4, 74px); gap: 8px; }
+.tc-grid i { display: block; height: 74px; background: var(--soft); border: 2px solid var(--line); }
+@keyframes tcn { 0% { background: var(--soft); } 100% { background: var(--accent); } }
+.slide.active .tc-n i { animation: tcn .01s linear both; animation-delay: calc(.4s + var(--k) * .3s); }
+.slide.active .tc-t i { animation: tcn .01s linear both; animation-delay: .4s; }
+.tc-row { display: grid; grid-template-columns: 280px 1fr; align-items: center; height: 58px; }
+.tc-row p { margin: 0 !important; font-size: 24px; }
+.tc-bar { display: flex; align-items: center; gap: 14px; }
+.tc-bar i { display: block; flex: none; height: 34px; width: var(--w); background: var(--accent); }
+.tc-row:first-of-type .tc-bar i { background: var(--navy); }
+.tc-bar span { font: 700 26px/1 var(--f-mono); color: var(--accent-text); white-space: nowrap; }
+.slide.active .tc-bar i { animation: gmgrow 1.2s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d); }
+
+.smi { position: relative; }
+.smi-m1, .smi-m2, .smi-m3, .smi-m4 { position: absolute; }
+.smi-cmd { font: 600 26px/1 var(--f-mono); margin: 0 0 10px !important; }
+.smi-out { font: 400 22px/1.45 var(--f-mono); background: var(--navy); color: #E6EAEE; padding: 18px 22px; margin: 0 0 24px !important; white-space: pre; }
+.smi-dim { color: #6F8293; }
+.smi-out span[class^="f"] { padding: 2px 0; transition: background .3s ease, color .3s ease; }
+.smi-m1.visible ~ .smi-out .f1, .smi-m2.visible ~ .smi-out .f2, .smi-m3.visible ~ .smi-out .f3, .smi-m4.visible ~ .smi-out .f4 { background: var(--accent); color: #FFFFFF; }
+.smi-list { margin: 0; padding-left: 40px; font-size: 28px; line-height: 1.35; }
+.smi-list li { margin-bottom: 8px; }
+.smi-list li::marker { font-weight: 700; color: var(--accent-text); }
+
+body.overview .cg-pop, body.overview .wp-cur, body.overview .wp-warp i, body.overview .lh-mask, body.overview .gm-bar i, body.overview .gc-seg, body.overview .gc-t, body.overview .tc-grid i, body.overview .tc-bar i,
+.speaker .cg-pop, .speaker .wp-cur, .speaker .wp-warp i, .speaker .lh-mask, .speaker .gm-bar i, .speaker .gc-seg, .speaker .gc-t, .speaker .tc-grid i, .speaker .tc-bar i { animation: none !important; }
+body.overview .lh-mask, .speaker .lh-mask { display: none; }
+body.overview .tc-grid i, .speaker .tc-grid i { background: var(--accent); }
+@media print {
+  .cg-pop, .wp-cur, .wp-warp i, .lh-mask, .gm-bar i, .gc-seg, .gc-t, .tc-grid i, .tc-bar i { animation: none !important; }
+  .lh-mask { display: none; }
+  .tc-grid i { background: var(--accent); }
+}
+
+.tc-cnt { margin: 12px 0 0 !important; font-size: 24px; color: var(--muted); }
+.tc-cnt b { font: 700 36px/1 var(--f-mono); color: var(--accent-text); margin-right: 6px; }
+.tc-k::before { counter-reset: c var(--c); content: counter(c); }
+.tc-k { --c: 64; }
+@keyframes tck { from { --c: 0; } to { --c: 64; } }
+.slide.active .tc-k { animation: tck 4.8s steps(64, end) .4s both; }
+body.overview .tc-k, .speaker .tc-k { animation: none !important; }
+@media print { .tc-k { animation: none !important; } }
+/* Lista de URIs */
+.uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
+</style>
+<style id="fuentes">/*@FONTS@*/</style>
+</head>
+<body>
+
+<main class="deck" id="deck">
+
+<!-- ===================== APERTURA ===================== -->
+
+<section class="slide orange" data-title="Portada">
+  <div class="cover-wrap">
+    <div>
+      <p class="cover-kicker">Curso taller</p>
+      <h1 class="cover-title">Ingeniería de datos para la investigación: procesamiento de imágenes satelitales con deep learning</h1>
+      <p class="cover-class">Clase 2<span>PCIe, VRAM y la GPU</span></p>
+    </div>
+    <div class="cover-meta">
+      <b>Cesar Aybar</b>
+      <span>Viernes 20 de noviembre de 2026</span>
+    </div>
+  </div>
+  <aside class="notes">
+Saludo y repaso rápido de la clase 1: los datos viajan del disco a la RAM y de ahí a la CPU, que trabaja al ritmo del reloj y se apoya en las cachés para no esperar.
+
+Hoy terminamos el camino: cómo cruzan los datos hacia la GPU, dónde los guarda y qué hace con ellos.
+  </aside>
+</section>
+
+<section class="slide orange" data-title="El camino de los datos">
+  <p class="eyebrow">Dónde quedamos</p>
+  <h1 class="st-title">El camino<br>de los datos</h1>
+  <div class="chain focus">
+    <p class="link">Disco</p><p class="arrow">→</p>
+    <p class="link">RAM</p><p class="arrow">→</p>
+    <p class="link">CPU</p><p class="arrow">→</p>
+    <p class="link on">PCIe</p><p class="arrow">→</p>
+    <p class="link on">VRAM</p><p class="arrow">→</p>
+    <p class="link gpu on">GPU</p>
+  </div>
+  <p class="st-sub">La clase pasada: disco, RAM y CPU. Hoy, el resto del camino.</p>
+  <aside class="notes">
+El mismo mapa de la clase pasada. Lo que ya vimos queda atenuado: disco, RAM y CPU.
+
+Repaso en tres frases:
+- Disco: con muchos archivos pequeños, el cuello de botella es el sistema operativo, no el disco.
+- RAM: la mesa de trabajo; si se acaba, el sistema usa el disco (swap) y todo se congela.
+- CPU: instrucciones básicas al ritmo del reloj; para no esperar 400 ciclos a la RAM usa las cachés.
+
+Hoy: PCIe (el puente hacia la GPU), VRAM (la memoria de la GPU) y la GPU.
+  </aside>
+</section>
+
+<!-- ===================== PARADA 4: PCIe ===================== -->
+
+<section class="slide orange" data-title="Parada 4 · PCIe">
+  <p class="eyebrow">Parada 4 de 5</p>
+  <h1 class="st-title">PCIe</h1>
+  <div class="chain focus">
+    <p class="link">Disco</p><p class="arrow">→</p>
+    <p class="link">RAM</p><p class="arrow">→</p>
+    <p class="link">CPU</p><p class="arrow">→</p>
+    <p class="link on">PCIe</p><p class="arrow">→</p>
+    <p class="link">VRAM</p><p class="arrow">→</p>
+    <p class="link gpu">GPU</p>
+  </div>
+  <p class="st-sub">El puente hacia la GPU.</p>
+  <aside class="notes">
+Cuarta parada: PCIe.
+
+La GPU no puede leer la RAM del PC: tiene su propia memoria (la VRAM). Los datos tienen que cruzar un puente: el bus PCIe.
+
+Ya lo cruzamos antes: el SSD NVMe también va por PCIe, y en la slide del DMA los datos del disco llegaban a la RAM por ahí.
+  </aside>
+</section>
+
+<section class="slide" data-title="¿Qué es PCIe?">
+  <h2 class="title">¿Qué es PCIe?</h2>
+  <div class="mover">
+    <svg viewBox="0 0 1000 620" role="img" aria-label="La CPU conectada por 16 carriles PCIe a la GPU y por 4 carriles al SSD NVMe">
+      <rect x="30" y="150" width="220" height="370" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="140" y="345" text-anchor="middle">CPU</text>
+      <rect x="720" y="120" width="250" height="250" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="845" y="160" text-anchor="middle">GPU</text>
+      <rect x="745" y="300" width="200" height="50" style="fill:var(--navy)"/>
+      <text class="svg-lbl-light" x="845" y="333" text-anchor="middle" style="font-size:24px">ranura x16</text>
+      <rect x="720" y="430" width="250" height="140" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="845" y="470" text-anchor="middle">SSD NVMe</text>
+      <rect x="745" y="500" width="200" height="44" style="fill:var(--navy)"/>
+      <text class="svg-lbl-light" x="845" y="530" text-anchor="middle" style="font-size:24px">M.2 x4</text>
+      <g class="lanes fragment" data-step="1">
+        <path d="M250 200 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+      </g>
+      <g class="lanes fragment" data-step="2">
+        <path d="M250 476 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 484 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 492 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 500 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <text class="svg-lbl" x="485" y="462" text-anchor="middle">x4 · ~8 GB/s</text>
+      </g>
+      <g class="lanes fragment" data-step="3">
+        <path d="M250 208 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 216 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 224 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 232 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 240 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 248 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 256 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 264 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 272 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 280 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 288 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 296 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 304 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 312 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <path d="M250 320 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
+        <text class="svg-lbl" x="485" y="186" text-anchor="middle">x16 · ~32 GB/s</text>
+      </g>
+    </svg>
+    <div class="mover-txt">
+      <p class="step-p fragment" data-step="1"><span class="n">1</span><span><b>Un carril</b>: un par de cables para enviar y otro para recibir. En PCIe 4.0, ~2 GB/s en cada sentido.</span></p>
+      <p class="step-p fragment" data-step="2"><span class="n">2</span><span><b>x4</b>: el SSD NVMe usa 4 carriles, ~8 GB/s.</span></p>
+      <p class="step-p fragment" data-step="3"><span class="n">3</span><span><b>x16</b>: la GPU usa 16 carriles, ~32 GB/s.</span></p>
+    </div>
+  </div>
+  <div class="foot"></div>
+  <aside class="notes">
+Tres clics.
+
+PCIe (PCI Express) es la autopista que conecta la CPU con todo lo rápido: la GPU, el SSD NVMe, las tarjetas de red. Está hecha de carriles.
+
+Clic 1: un carril son dos pares de cables, uno para cada sentido, que envían bits en serie a gran velocidad. Un carril PCIe 4.0 da ~2 GB/s en cada sentido, al mismo tiempo.
+
+Clic 2: los dispositivos usan varios carriles y las velocidades se suman. Un SSD NVMe usa 4 (x4): ~8 GB/s. Por eso un NVMe Gen4 anuncia ~7 GB/s: es casi el máximo de su conexión.
+
+Clic 3: la GPU usa 16 carriles (x16): ~32 GB/s en PCIe 4.0. Es la ranura larga de la placa.
+
+Los carriles salen directamente del procesador (una CPU de PC tiene ~20–28; un servidor, 128 o más) o de un chip auxiliar de la placa (chipset), que a su vez se conecta a la CPU por un enlace más estrecho.
+  </aside>
+</section>
+
+<section class="slide" data-title="Generaciones de PCIe">
+  <h2 class="title">Cada generación duplica la velocidad</h2>
+  <div class="pipe-row"><div><p class="pipe-name">PCIe 3.0 x16</p><p class="pipe-sub">equipos de hace 5 años o más</p></div><div><div class="pipe-bar slow" style="width:133px;--i:0"></div></div><p class="pipe-val">~16 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">PCIe 4.0 x16</p><p class="pipe-sub">RTX 4090, A100</p></div><div><div class="pipe-bar" style="width:265px;--i:1"></div></div><p class="pipe-val">~32 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">PCIe 5.0 x16</p><p class="pipe-sub">RTX 5090, H100</p></div><div><div class="pipe-bar" style="width:530px;--i:2"></div></div><p class="pipe-val">~64 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">PCIe 6.0 x16</p><p class="pipe-sub">llegando a servidores</p></div><div><div class="pipe-bar" style="width:1060px;--i:3"></div></div><p class="pipe-val">~128 GB/s</p></div>
+  <p class="fragment" style="margin-top:44px">Una tarjeta y una ranura de distinta generación van a la velocidad de la más lenta.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Las barras crecen solas; un clic muestra la última frase. Valores por sentido (PCIe envía y recibe a la vez).
+
+- PCIe 3.0: ~1 GB/s por carril; x16 ≈ 16 GB/s.
+- PCIe 4.0: ~2 GB/s por carril; x16 ≈ 32 GB/s. RTX 3090/4090, A100.
+- PCIe 5.0: ~4 GB/s por carril; x16 ≈ 64 GB/s. RTX 5090, H100.
+- PCIe 6.0: ~8 GB/s por carril; x16 ≈ 128 GB/s. Recién llegando a servidores.
+
+Todo es compatible hacia atrás: una GPU Gen5 en una placa Gen4 funciona, pero a velocidad Gen4. Lo mismo con los SSD.
+
+Si preguntan por varias GPUs: entre GPUs de centro de datos se usa NVLink, una conexión directa mucho más rápida que PCIe (900 GB/s en una H100).
+  </aside>
+</section>
+
+<section class="slide" data-title="PCIe es el tramo más estrecho">
+  <h2 class="title">PCIe es el tramo más estrecho</h2>
+  <div class="pipe-row"><div><p class="pipe-name">VRAM de una H100</p><p class="pipe-sub">dentro de la GPU</p></div><div><div class="pipe-bar" style="width:1060px;--i:0"></div></div><p class="pipe-val">3 350 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">VRAM de una RTX 4090</p><p class="pipe-sub">dentro de la GPU</p></div><div><div class="pipe-bar" style="width:316px;--i:1"></div></div><p class="pipe-val">1 000 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">RAM de un PC</p><p class="pipe-sub">2 canales DDR5</p></div><div><div class="pipe-bar slow" style="width:28px;--i:2"></div></div><p class="pipe-val">90 GB/s</p></div>
+  <div class="pipe-row"><div><p class="pipe-name">PCIe 4.0 x16</p><p class="pipe-sub">de la RAM a la GPU</p></div><div><div class="pipe-bar hot" style="width:10px;--i:3"></div></div><p class="pipe-val">32 GB/s</p></div>
+  <p class="fragment" style="margin-top:44px">Hasta 100 veces más lento que la VRAM. <b>Conviene cruzarlo pocas veces y dejar los datos del otro lado.</b></p>
+  <div class="foot"></div>
+  <aside class="notes">
+Las barras crecen solas, a escala real; un clic muestra la conclusión.
+
+Dentro de la GPU, la VRAM entrega 1 000–3 350 GB/s. La RAM del PC, ~90 GB/s. Y el puente entre las dos, PCIe 4.0 x16, solo 32 GB/s: la barra casi no se ve. Es unas 100 veces menos que la VRAM de una H100 y unas 30 veces menos que la de una RTX 4090.
+
+Consecuencia: los datos conviene mandarlos a la GPU una vez y que se queden allí, en vez de ir y venir entre la RAM y la VRAM.
+  </aside>
+</section>
+
+<section class="slide" data-title="¿Quién mueve los datos de la RAM a la GPU?">
+  <h2 class="title">¿Quién mueve los datos de la RAM a la GPU?</h2>
+  <div class="mover">
+    <svg viewBox="0 0 1000 620" role="img" aria-label="Los datos pasan de la memoria normal a la memoria fijada copiados por la CPU, y el motor de copia de la GPU los lleva por PCIe hasta la VRAM">
+      <rect x="30" y="20" width="360" height="160" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="210" y="108" text-anchor="middle">CPU</text>
+      <rect x="30" y="300" width="360" height="300" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="210" y="342" text-anchor="middle">RAM</text>
+      <rect x="50" y="365" width="155" height="210" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:2"/>
+      <text class="svg-lbl" x="127" y="400" text-anchor="middle" style="font-size:24px">Memoria</text>
+      <text class="svg-lbl" x="127" y="428" text-anchor="middle" style="font-size:24px">normal</text>
+      <rect x="215" y="365" width="155" height="210" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:2"/>
+      <text class="svg-lbl" x="292" y="400" text-anchor="middle" style="font-size:24px">Memoria</text>
+      <text class="svg-lbl" x="292" y="428" text-anchor="middle" style="font-size:24px">fijada</text>
+      <rect x="600" y="20" width="370" height="580" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
+      <text class="svg-lbl" x="950" y="56" text-anchor="end">GPU</text>
+      <rect x="630" y="90" width="310" height="70" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:2"/>
+      <text class="svg-lbl" x="785" y="133" text-anchor="middle" style="font-size:24px">Motor de copia (DMA)</text>
+      <rect x="630" y="365" width="310" height="210" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:2"/>
+      <text class="svg-lbl" x="785" y="400" text-anchor="middle">VRAM</text>
+      <g class="fragment" data-step="1">
+        <rect x="70" y="470" width="115" height="70" style="fill:var(--accent)"/>
+        <text class="svg-lbl-light" x="127" y="513" text-anchor="middle" style="font-size:24px">datos</text>
+      </g>
+      <g class="fragment dma" data-step="2">
+        <path d="M60 465 V150 H360 V465" style="fill:none;stroke:var(--accent);stroke-width:8"/>
+        <rect x="235" y="470" width="115" height="70" style="fill:var(--accent)"/>
+        <text class="svg-lbl-light" x="292" y="513" text-anchor="middle" style="font-size:24px">datos</text>
+        <text class="svg-lbl" x="140" y="260" style="font-size:24px">la CPU copia</text>
+      </g>
+      <g class="fragment dma" data-step="3">
+        <rect x="630" y="90" width="310" height="70" style="fill:var(--accent);fill-opacity:.2;stroke:var(--accent);stroke-width:4"/>
+        <path d="M370 505 H650" style="fill:none;stroke:var(--accent);stroke-width:12"/>
+        <rect x="665" y="470" width="115" height="70" style="fill:var(--accent)"/>
+        <text class="svg-lbl-light" x="722" y="513" text-anchor="middle" style="font-size:24px">datos</text>
+        <text class="svg-lbl" x="485" y="490" text-anchor="middle" style="fill:var(--accent-text)">PCIe</text>
+      </g>
+      <g class="fragment" data-step="4">
+        <path d="M100 205 L320 335 M320 205 L100 335" style="fill:none;stroke:var(--ink);stroke-width:6"/>
+      </g>
+    </svg>
+    <div class="mover-txt">
+      <p class="step-p fragment" data-step="1"><span class="n">1</span><span>Los datos están en la RAM.</span></p>
+      <p class="step-p fragment" data-step="2"><span class="n">2</span><span>Si están en memoria normal, la CPU primero los copia a memoria fijada (memoria que el sistema promete no mover de sitio).</span></p>
+      <p class="step-p fragment" data-step="3"><span class="n">3</span><span><b>El motor de copia de la GPU los trae por PCIe hasta la VRAM. Otra vez DMA.</b></span></p>
+      <p class="step-p fragment" data-step="4"><span class="n">4</span><span>Si los datos ya están en memoria fijada, el paso 2 desaparece.</span></p>
+    </div>
+  </div>
+  <div class="foot"></div>
+  <aside class="notes">
+Cuatro clics. Es la misma idea que el DMA del disco a la RAM, ahora de la RAM a la GPU.
+
+Clic 1: los datos están en la RAM del PC.
+
+Clic 2: la GPU solo puede leer por DMA de memoria «fijada» (pinned o page-locked): memoria que el sistema operativo promete no mover ni mandar al swap mientras dura la copia. Si los datos están en memoria normal, el driver usa la CPU para copiarlos primero a un espacio fijado. Es una copia extra, que gasta CPU y tiempo.
+
+Clic 3: el motor de copia de la GPU (un DMA propio) trae los datos por PCIe hasta la VRAM. La CPU solo da la orden. Mientras tanto, la GPU puede seguir calculando con otros datos.
+
+Clic 4: si los datos ya se dejaron en memoria fijada desde el principio, el paso 2 desaparece y la copia es casi el doble de rápida (siguiente slide).
+  </aside>
+</section>
+
+<section class="slide" data-title="¿Cuánto tarda en cruzar 1 GB?">
+  <h2 class="title">¿Cuánto tarda en cruzar 1 GB?</h2>
+  <div class="fragment race">
+    <div class="race-row pc-race"><p>PCIe 5.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.2s"></div></div><p class="race-time" style="--t:.2s">~20 ms</p></div>
+    <div class="race-row pc-race"><p>PCIe 4.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.4s"></div></div><p class="race-time" style="--t:.4s">~40 ms</p></div>
+    <div class="race-row pc-race"><p>PCIe 4.0 x16, memoria normal</p><div class="race-track"><div class="race-fill" style="--t:.83s"></div></div><p class="race-time" style="--t:.83s">~85 ms</p></div>
+    <div class="race-row pc-race"><p>PCIe 3.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.83s"></div></div><p class="race-time" style="--t:.83s">~85 ms</p></div>
+    <div class="race-row pc-race"><p>GPU externa por Thunderbolt</p><div class="race-track"><div class="race-fill hot" style="--t:4s"></div></div><p class="race-time" style="--t:4s">~400 ms</p></div>
+  </div>
+  <p class="fragment" style="margin-top:44px">Comparación: dentro de la GPU, la VRAM de una RTX 4090 lee ese mismo 1 GB en <b>~1 ms</b>.</p>
+  <p class="small" style="margin-top:24px">Clic para empezar. En la animación, 1 segundo equivale a 100 ms reales.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Un clic arranca la carrera; otro muestra la comparación. Velocidades reales aproximadas, no las teóricas.
+
+- PCIe 5.0 x16 con memoria fijada: ~50 GB/s → ~20 ms.
+- PCIe 4.0 x16 con memoria fijada: ~25 GB/s → ~40 ms.
+- PCIe 4.0 x16 con memoria normal: ~12 GB/s, por la copia extra de la CPU → ~85 ms.
+- PCIe 3.0 x16: ~12 GB/s → ~85 ms.
+- GPU externa por Thunderbolt (4 carriles PCIe 3.0): ~2,5 GB/s → ~400 ms.
+
+Último clic: dentro de la GPU, la VRAM de una RTX 4090 (~1 000 GB/s) lee 1 GB en ~1 ms. Cruzar el puente cuesta entre 20 y 400 veces más que leer del otro lado.
+  </aside>
+</section>
+
+<section class="slide" data-title="¿Mi GPU va por x16?">
+  <h2 class="title">¿Mi GPU va de verdad por x16?</h2>
+<pre class="term-out" style="margin-top:0">$ nvidia-smi --query-gpu=name,pcie.link.gen.current,pcie.link.width.current --format=csv
+name, pcie.link.gen.current, pcie.link.width.current
+NVIDIA GeForce RTX 4090, 4, 16</pre>
+  <ul class="bul" style="margin-top:44px">
+    <li class="fragment">La segunda ranura larga de muchas placas es x4, aunque se vea igual.</li>
+    <li class="fragment">Algunos SSD M.2 comparten carriles con la GPU y la bajan a x8.</li>
+    <li class="fragment">Una GPU externa por Thunderbolt va por x4.</li>
+    <li class="fragment">En reposo la GPU baja la velocidad del enlace: hay que mirarlo con la GPU trabajando.</li>
+  </ul>
+  <p class="small" style="margin-top:36px">En Windows: GPU-Z, campo «Bus Interface».</p>
+  <div class="foot"></div>
+  <aside class="notes">
+El comando de arriba (Linux o Windows con los drivers de NVIDIA) muestra la generación y el número de carriles con que está funcionando la GPU en este momento. En el ejemplo: PCIe 4.0, x16. Lo ideal.
+
+Cuatro clics, cuatro trampas comunes:
+
+1. Muchas placas de PC tienen dos o tres ranuras largas, pero solo la primera es x16 de verdad; las demás funcionan a x4. Si la GPU está en la ranura equivocada, va a un cuarto de velocidad.
+2. En algunas placas, poner un segundo SSD M.2 en cierta ranura le quita carriles a la GPU y la deja en x8. Está en el manual de la placa.
+3. Las GPU externas por Thunderbolt usan 4 carriles (slide anterior: ~400 ms por GB).
+4. Para ahorrar energía, en reposo la GPU baja el enlace a PCIe 1.0 o 2.0. Si el comando dice «1» con la GPU sin hacer nada, es normal.
+
+En Windows, GPU-Z (gratis) muestra en «Bus Interface» algo como «PCIe x16 4.0 @ x16 4.0»: a la izquierda lo que soporta la tarjeta; a la derecha, cómo está funcionando.
+  </aside>
+</section>
+
+<!-- ===================== PARADA 5: VRAM ===================== -->
+
+<section class="slide orange" data-title="Parada 5 · La VRAM">
+  <p class="eyebrow">Parada 5 de 5</p>
+  <h1 class="st-title">La VRAM</h1>
+  <div class="chain focus">
+    <p class="link">Disco</p><p class="arrow">→</p>
+    <p class="link">RAM</p><p class="arrow">→</p>
+    <p class="link">CPU</p><p class="arrow">→</p>
+    <p class="link">PCIe</p><p class="arrow">→</p>
+    <p class="link on">VRAM</p><p class="arrow">→</p>
+    <p class="link gpu">GPU</p>
+  </div>
+  <p class="st-sub">La memoria de la GPU.</p>
+  <aside class="notes">
+Quinta y última parada de hoy: la VRAM.
+
+Los datos cruzaron PCIe y llegaron a la memoria propia de la GPU. Vamos a ver dónde está, qué la hace tan rápida y en qué se diferencia de la RAM.
+  </aside>
+</section>
+
+<section class="slide" data-title="GDDR y HBM">
+  <h2 class="title">La VRAM está pegada al chip de la GPU</h2>
+  <svg class="vram-svg" viewBox="0 0 1664 540" role="img" aria-label="Izquierda: tarjeta de consumo con 12 chips GDDR alrededor del chip de la GPU. Derecha: GPU de centro de datos con chips HBM apilados junto al chip">
+    <g>
+      <rect x="40" y="20" width="720" height="420" style="fill:var(--navy)"/>
+      <g class="lanes fragment" data-step="1">
+        <path d="M295 140 V170 M365 140 V170 M435 140 V170 M505 140 V170 M295 330 V360 M365 330 V360 M435 330 V360 M505 330 V360 M210 205 H260 M210 295 H260 M540 205 H590 M540 295 H590" style="fill:none;stroke:#F29A5E;stroke-width:6"/>
+      </g>
+      <rect x="260" y="170" width="280" height="160" style="fill:var(--accent)"/>
+      <text class="svg-lbl-light" x="400" y="259" text-anchor="middle">GPU</text>
+      <rect x="265" y="80" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="335" y="80" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="405" y="80" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="475" y="80" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="265" y="360" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="335" y="360" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="405" y="360" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="475" y="360" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="150" y="175" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="150" y="265" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="590" y="175" width="60" height="60" style="fill:var(--slate)"/>
+      <rect x="590" y="265" width="60" height="60" style="fill:var(--slate)"/>
+      <text class="svg-lbl" x="400" y="482" text-anchor="middle">Tarjeta de consumo (RTX 4090)</text>
+      <text class="svg-lbl" x="400" y="520" text-anchor="middle" style="font-size:24px;fill:var(--muted)">12 chips GDDR6X alrededor: 24 GB, ~1 TB/s</text>
+    </g>
+    <g class="fragment" data-step="2">
+      <rect x="904" y="20" width="720" height="420" style="fill:var(--navy)"/>
+      <rect x="1004" y="90" width="520" height="280" style="fill:#2B3E4E"/>
+      <g class="lanes fragment" data-step="2">
+        <path d="M1150 135 H1174 M1150 205 H1174 M1150 275 H1174 M1150 345 H1174 M1354 135 H1378 M1354 205 H1378 M1354 275 H1378 M1354 345 H1378" style="fill:none;stroke:#F29A5E;stroke-width:14"/>
+      </g>
+      <rect x="1174" y="110" width="180" height="250" style="fill:var(--accent)"/>
+      <text class="svg-lbl-light" x="1264" y="243" text-anchor="middle">GPU</text>
+      <g style="fill:var(--slate)">
+        <rect x="1040" y="112" width="110" height="46"/><rect x="1046" y="104" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1040" y="182" width="110" height="46"/><rect x="1046" y="174" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1040" y="252" width="110" height="46"/><rect x="1046" y="244" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1040" y="322" width="110" height="46"/><rect x="1046" y="314" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1378" y="112" width="110" height="46"/><rect x="1378" y="104" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1378" y="182" width="110" height="46"/><rect x="1378" y="174" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1378" y="252" width="110" height="46"/><rect x="1378" y="244" width="104" height="8" style="fill:#B4C0CB"/>
+        <rect x="1378" y="322" width="110" height="46"/><rect x="1378" y="314" width="104" height="8" style="fill:#B4C0CB"/>
+      </g>
+      <text class="svg-lbl" x="1264" y="482" text-anchor="middle">GPU de centro de datos (H100)</text>
+      <text class="svg-lbl" x="1264" y="520" text-anchor="middle" style="font-size:24px;fill:var(--muted)">Chips HBM apilados junto al chip: 80 GB, ~3,35 TB/s</text>
+    </g>
+  </svg>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. El primero enciende las conexiones de la tarjeta de la izquierda; el segundo muestra la GPU de centro de datos.
+
+Izquierda, una tarjeta de consumo (RTX 4090): el chip de la GPU en el centro y 12 chips de memoria GDDR6X alrededor, soldados en la misma placa, a pocos centímetros. Resultado: 24 GB a ~1 TB/s, más de diez veces la RAM de un PC.
+
+Derecha, una GPU de centro de datos (H100): la memoria HBM son pilas de chips de memoria (8 a 12 capas) montadas en el mismo encapsulado, pegadas al chip de la GPU, con miles de conexiones cortísimas. Resultado: 80 GB a ~3,35 TB/s. (El dibujo es esquemático: la H100 tiene 5 pilas activas.)
+
+Por qué está pegada: para mover terabytes por segundo hacen falta muchísimos cables y muy cortos (siguiente slide). Por eso la VRAM no se puede ampliar: viene soldada. Si tu GPU tiene 12 GB, tiene 12 GB para siempre.
+  </aside>
+</section>
+
+<section class="slide" data-title="La VRAM en tres números">
+  <h2 class="title">La VRAM con los mismos tres números</h2>
+  <div class="term-row fragment"><p class="term">Capacidad</p><p class="term-d">8–32 GB en una tarjeta de consumo.<span>80–192 GB en una GPU de centro de datos. Colab gratis: 16 GB.</span></p></div>
+  <div class="term-row fragment"><p class="term">Velocidad</p><p class="term-d">0,3–1,8 TB/s con GDDR; 2–8 TB/s con HBM.<span>Entre 10 y 80 veces la RAM de un PC.</span></p></div>
+  <div class="term-row fragment"><p class="term">Latencia</p><p class="term-d">~400 ns: más que la RAM.<span>La GPU no espera un dato suelto: pide miles a la vez.</span></p></div>
+  <div class="foot"></div>
+  <aside class="notes">
+Tres clics. Mismos tres números que para el disco y la RAM.
+
+Capacidad: 8–12 GB en tarjetas de entrada, 24–32 GB en las de gama alta (RTX 4090: 24 GB; RTX 5090: 32 GB), 80–192 GB en las de centro de datos (A100, H100, B200). Google Colab gratis suele dar una T4 con 16 GB.
+
+Velocidad: 0,3–1,8 TB/s con memoria GDDR y 2–8 TB/s con HBM. Comparar con la RAM de un PC (~90 GB/s) y con PCIe (~32 GB/s).
+
+Latencia: curiosamente, la VRAM tarda más que la RAM en entregar un dato suelto (cientos de nanosegundos). La CPU y su RAM están pensadas para que un dato llegue lo antes posible (latencia); la GPU y su VRAM, para mover muchísimos datos a la vez (ancho de banda). Es la diferencia de fondo entre CPU y GPU: la próxima clase.
+  </aside>
+</section>
+
+<section class="slide" data-title="Un bus muy ancho">
+  <h2 class="title">El secreto de la VRAM: un bus muy ancho</h2>
+  <svg class="bus-svg" viewBox="0 0 1664 560" role="img" aria-label="Comparación del ancho del bus: la RAM de un PC usa 128 bits, la GDDR6X 384 bits y la HBM3 5120 bits">
+    <defs>
+      <pattern id="wires" width="10" height="3" patternUnits="userSpaceOnUse"><rect width="10" height="1.6" style="fill:var(--ink)"/></pattern>
+    </defs>
+    <g class="fragment" data-step="1">
+      <text class="svg-lbl" x="0" y="34">RAM de un PC</text>
+      <text class="svg-lbl" x="0" y="66" style="font-size:24px;fill:var(--muted)">128 bits × 5,6 Gb/s</text>
+      <rect x="440" y="40" width="980" height="8" style="fill:url(#wires)"/>
+      <g class="lanes fragment" data-step="1"><path d="M440 44 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
+      <text class="svg-lbl" x="1664" y="54" text-anchor="end">~90 GB/s</text>
+    </g>
+    <g class="fragment" data-step="2">
+      <text class="svg-lbl" x="0" y="140">GDDR6X (RTX 4090)</text>
+      <text class="svg-lbl" x="0" y="172" style="font-size:24px;fill:var(--muted)">384 bits × 21 Gb/s</text>
+      <rect x="440" y="134" width="980" height="24" style="fill:url(#wires)"/>
+      <g class="lanes fragment" data-step="2"><path d="M440 140 H1420 M440 152 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
+      <text class="svg-lbl" x="1664" y="156" text-anchor="end">~1 TB/s</text>
+    </g>
+    <g class="fragment" data-step="3">
+      <text class="svg-lbl" x="0" y="370">HBM3 (H100)</text>
+      <text class="svg-lbl" x="0" y="402" style="font-size:24px;fill:var(--muted)">5 120 bits × 5,2 Gb/s</text>
+      <rect x="440" y="230" width="980" height="300" style="fill:url(#wires)"/>
+      <g class="lanes fragment" data-step="3"><path d="M440 250 H1420 M440 290 H1420 M440 330 H1420 M440 370 H1420 M440 410 H1420 M440 450 H1420 M440 490 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
+      <text class="svg-lbl" x="1664" y="390" text-anchor="end">~3,35 TB/s</text>
+    </g>
+  </svg>
+  <p class="fragment" data-step="4" style="margin-top:20px">Cada cable de la HBM es más lento que uno de GDDR, <b>pero son 13 veces más cables</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Cuatro clics. El grosor de cada franja es proporcional al número de cables (bits) que conectan la memoria con el chip.
+
+Velocidad = número de cables × velocidad de cada cable.
+
+Clic 1, RAM de un PC: 2 canales de 64 bits = 128 cables, cada uno a 5,6 Gb/s (DDR5-5600). 128 × 5,6 ÷ 8 ≈ 90 GB/s.
+
+Clic 2, GDDR6X de una RTX 4090: un bus de 384 bits (12 chips de 32 bits) y cada cable va muy rápido, 21 Gb/s. 384 × 21 ÷ 8 ≈ 1 TB/s.
+
+Clic 3, HBM3 de una H100: 5 pilas de 1024 bits = 5 120 cables. Cada uno es más lento (~5,2 Gb/s), pero son muchísimos. 5 120 × 5,2 ÷ 8 ≈ 3,35 TB/s.
+
+Clic 4: la HBM gana por anchura, no por velocidad de cada cable. Poner 5 120 cables solo es posible si la memoria está pegada al chip, en el mismo encapsulado: por eso la HBM es tan cara y solo aparece en GPUs de centro de datos.
+
+Analogía: la RAM es una carretera de 2 carriles muy bien asfaltada; la HBM, una avenida de 80 carriles.
+  </aside>
+</section>
+
+<!-- ===================== RESUMEN ===================== -->
+
+<section class="slide" data-title="Todo el camino en un gráfico">
+  <h2 class="title">Todo el camino en un gráfico</h2>
+  <svg class="sum-svg" viewBox="0 0 1664 690" role="img" aria-label="Gráfico de capacidad contra tiempo de acceso: L1, L2, L3, RAM, VRAM, SSD, disco duro y nube; a mayor capacidad, mayor tiempo">
+    <g style="stroke:var(--line);stroke-width:1.5">
+      <path d="M200 30 V550 M447 30 V550 M694 30 V550 M942 30 V550 M1189 30 V550 M1436 30 V550"/>
+      <path d="M200 30 H1580 M200 95 H1580 M200 160 H1580 M200 225 H1580 M200 290 H1580 M200 355 H1580 M200 420 H1580 M200 485 H1580 M200 550 H1580"/>
+    </g>
+    <g class="svg-lbl" style="font-size:24px;font-weight:500;fill:var(--muted)">
+      <text x="180" y="38" text-anchor="end">1 ns</text><text x="180" y="168" text-anchor="end">100 ns</text><text x="180" y="298" text-anchor="end">10 µs</text><text x="180" y="428" text-anchor="end">1 ms</text><text x="180" y="558" text-anchor="end">100 ms</text>
+      <text x="200" y="590" text-anchor="middle">10 KB</text><text x="447" y="590" text-anchor="middle">1 MB</text><text x="694" y="590" text-anchor="middle">100 MB</text><text x="942" y="590" text-anchor="middle">10 GB</text><text x="1189" y="590" text-anchor="middle">1 TB</text><text x="1436" y="590" text-anchor="middle">100 TB</text>
+    </g>
+    <text class="svg-lbl" x="890" y="640" text-anchor="middle">Capacidad →</text>
+    <defs><marker id="ah-acc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker></defs>
+    <text class="svg-lbl" x="1580" y="18" text-anchor="end">↓ Tiempo para encontrar un dato</text>
+    <g class="fragment" data-step="1"><circle cx="284" cy="30" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="304" y="40">L1</text></g>
+    <g class="fragment" data-step="2"><circle cx="484" cy="69" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="504" y="78">L2</text></g>
+    <g class="fragment" data-step="3"><circle cx="634" cy="100" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="654" y="109">L3</text></g>
+    <g class="fragment" data-step="4"><circle cx="1005" cy="160" r="13" style="fill:var(--blue)"/><text class="svg-lbl" x="985" y="150" text-anchor="end">RAM</text></g>
+    <g class="fragment" data-step="5"><circle cx="989" cy="199" r="13" style="fill:var(--navy)"/><text class="svg-lbl" x="1010" y="225">VRAM</text></g>
+    <g class="fragment" data-step="6"><circle cx="1226" cy="355" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1246" y="364">SSD</text></g>
+    <g class="fragment" data-step="7"><circle cx="1350" cy="485" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1370" y="494">Disco duro</text></g>
+    <g class="fragment" data-step="8"><circle cx="1560" cy="550" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1540" y="530" text-anchor="end">Nube</text></g>
+    <g class="fragment" data-step="9">
+      <path d="M330 180 L1150 540" style="fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:14 10" marker-end="url(#ah-acc)"/>
+      <text class="svg-lbl" x="215" y="470" style="fill:var(--accent-text)">Más grande, más lejos, más lento</text>
+    </g>
+  </svg>
+  <div class="foot"></div>
+  <aside class="notes">
+Nueve clics: aparece cada memoria y al final la tendencia. Los dos ejes son logarítmicos: cada línea es 10 o 100 veces más.
+
+L1, L2, L3, RAM, VRAM, SSD, disco duro, nube. Cuanto más grande, más lejos del núcleo y más tarda en entregar un dato. Es la misma regla en toda la cadena: por eso existen tantos niveles, y por eso los datos que más se usan se copian cerca.
+
+La única que se sale un poco de la línea es la VRAM: tarda más que la RAM en entregar un dato suelto, pero entrega muchísimos más por segundo (el bus ancho de la slide anterior). Esa diferencia, latencia frente a ancho de banda, es la diferencia de fondo entre la CPU y la GPU.
+
+Valores aproximados: L1 48 KB y ~1 ns; L2 2 MB y ~4 ns; L3 32 MB y ~12 ns; RAM 32 GB y ~100 ns; VRAM 24 GB y ~400 ns; SSD 2 TB y ~0,1 ms; disco duro 20 TB y ~10 ms; nube (sin límite práctico) y ~100 ms.
+  </aside>
+</section>
+
+<!-- ===================== LA GPU ===================== -->
+
+<section class="slide orange" data-title="Destino · La GPU">
+  <p class="eyebrow">Destino</p>
+  <h1 class="st-title">La GPU</h1>
+  <div class="chain focus">
+    <p class="link">Disco</p><p class="arrow">→</p>
+    <p class="link">RAM</p><p class="arrow">→</p>
+    <p class="link">CPU</p><p class="arrow">→</p>
+    <p class="link">PCIe</p><p class="arrow">→</p>
+    <p class="link">VRAM</p><p class="arrow">→</p>
+    <p class="link gpu on">GPU</p>
+  </div>
+  <p class="st-sub">Donde se hacen las cuentas.</p>
+  <aside class="notes">
+Llegamos al final del camino: los datos ya están en la VRAM, pegados a la GPU.
+
+Vamos a ver qué hay dentro de una GPU, cómo trabaja (warps y miles de hilos), por qué no siempre conviene usarla y cómo mirar qué está haciendo.
+  </aside>
+</section>
+
+<section class="slide" data-title="CPU y GPU">
+  <h2 class="title">La CPU y la GPU reparten el chip distinto</h2>
+  <div class="cg">
+    <div><p class="cg-h">CPU <span>Ryzen 9 9950X · 16 núcleos</span></p>
+      <svg class="cg-svg" viewBox="0 0 800 460" role="img" aria-label="Chip de CPU con 16 núcleos grandes, cada uno con mucha área de control y caché, y una caché L3 grande"><rect x="0" y="0" width="800" height="460" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/><g class="cg-pop" style="--d:0.00s"><rect x="20" y="20" width="62" height="78" style="fill:var(--navy)"/><rect x="82" y="20" width="35" height="78" style="fill:var(--accent)"/><rect x="117" y="20" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="20" y="20" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.06s"><rect x="208" y="20" width="62" height="78" style="fill:var(--navy)"/><rect x="270" y="20" width="35" height="78" style="fill:var(--accent)"/><rect x="305" y="20" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="208" y="20" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.12s"><rect x="396" y="20" width="62" height="78" style="fill:var(--navy)"/><rect x="458" y="20" width="35" height="78" style="fill:var(--accent)"/><rect x="493" y="20" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="396" y="20" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.18s"><rect x="584" y="20" width="62" height="78" style="fill:var(--navy)"/><rect x="646" y="20" width="35" height="78" style="fill:var(--accent)"/><rect x="681" y="20" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="584" y="20" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.24s"><rect x="20" y="110" width="62" height="78" style="fill:var(--navy)"/><rect x="82" y="110" width="35" height="78" style="fill:var(--accent)"/><rect x="117" y="110" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="20" y="110" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.30s"><rect x="208" y="110" width="62" height="78" style="fill:var(--navy)"/><rect x="270" y="110" width="35" height="78" style="fill:var(--accent)"/><rect x="305" y="110" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="208" y="110" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.36s"><rect x="396" y="110" width="62" height="78" style="fill:var(--navy)"/><rect x="458" y="110" width="35" height="78" style="fill:var(--accent)"/><rect x="493" y="110" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="396" y="110" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.42s"><rect x="584" y="110" width="62" height="78" style="fill:var(--navy)"/><rect x="646" y="110" width="35" height="78" style="fill:var(--accent)"/><rect x="681" y="110" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="584" y="110" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.48s"><rect x="20" y="200" width="62" height="78" style="fill:var(--navy)"/><rect x="82" y="200" width="35" height="78" style="fill:var(--accent)"/><rect x="117" y="200" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="20" y="200" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.54s"><rect x="208" y="200" width="62" height="78" style="fill:var(--navy)"/><rect x="270" y="200" width="35" height="78" style="fill:var(--accent)"/><rect x="305" y="200" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="208" y="200" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.60s"><rect x="396" y="200" width="62" height="78" style="fill:var(--navy)"/><rect x="458" y="200" width="35" height="78" style="fill:var(--accent)"/><rect x="493" y="200" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="396" y="200" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.66s"><rect x="584" y="200" width="62" height="78" style="fill:var(--navy)"/><rect x="646" y="200" width="35" height="78" style="fill:var(--accent)"/><rect x="681" y="200" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="584" y="200" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.72s"><rect x="20" y="290" width="62" height="78" style="fill:var(--navy)"/><rect x="82" y="290" width="35" height="78" style="fill:var(--accent)"/><rect x="117" y="290" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="20" y="290" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.78s"><rect x="208" y="290" width="62" height="78" style="fill:var(--navy)"/><rect x="270" y="290" width="35" height="78" style="fill:var(--accent)"/><rect x="305" y="290" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="208" y="290" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.84s"><rect x="396" y="290" width="62" height="78" style="fill:var(--navy)"/><rect x="458" y="290" width="35" height="78" style="fill:var(--accent)"/><rect x="493" y="290" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="396" y="290" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><g class="cg-pop" style="--d:0.90s"><rect x="584" y="290" width="62" height="78" style="fill:var(--navy)"/><rect x="646" y="290" width="35" height="78" style="fill:var(--accent)"/><rect x="681" y="290" width="79" height="78" style="fill:var(--blue-soft)"/><rect x="584" y="290" width="176" height="78" style="fill:none;stroke:var(--ink);stroke-width:1.5"/></g><rect class="cg-pop" style="--d:1s;fill:var(--blue-soft);stroke:var(--blue);stroke-width:2" x="20" y="384" width="740" height="56"/><text class="svg-lbl" x="390" y="421" text-anchor="middle" style="font-size:24px">L3 · 64 MB</text></svg></div>
+    <div><p class="cg-h">GPU <span>RTX 4090 · 128 SM, 16 384 núcleos</span></p>
+      <svg class="cg-svg" viewBox="0 0 800 460" role="img" aria-label="Chip de GPU con 128 bloques pequeños llenos de unidades de cálculo y una caché L2 en el medio"><rect x="0" y="0" width="800" height="460" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/><g class="cg-pop" style="--d:0.400s"><rect x="19" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.408s"><rect x="67" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.416s"><rect x="115" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.424s"><rect x="163" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.432s"><rect x="211" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.440s"><rect x="259" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.448s"><rect x="307" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.456s"><rect x="355" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.464s"><rect x="403" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.472s"><rect x="451" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.480s"><rect x="499" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.488s"><rect x="547" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.496s"><rect x="595" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.504s"><rect x="643" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.512s"><rect x="691" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.520s"><rect x="739" y="20" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="20" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="51" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.528s"><rect x="19" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.536s"><rect x="67" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.544s"><rect x="115" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.552s"><rect x="163" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.560s"><rect x="211" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.568s"><rect x="259" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.576s"><rect x="307" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.584s"><rect x="355" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.592s"><rect x="403" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.600s"><rect x="451" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.608s"><rect x="499" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.616s"><rect x="547" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.624s"><rect x="595" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.632s"><rect x="643" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.640s"><rect x="691" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.648s"><rect x="739" y="64" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="64" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="95" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.656s"><rect x="19" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.664s"><rect x="67" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.672s"><rect x="115" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.680s"><rect x="163" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.688s"><rect x="211" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.696s"><rect x="259" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.704s"><rect x="307" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.712s"><rect x="355" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.720s"><rect x="403" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.728s"><rect x="451" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.736s"><rect x="499" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.744s"><rect x="547" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.752s"><rect x="595" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.760s"><rect x="643" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.768s"><rect x="691" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.776s"><rect x="739" y="108" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="108" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="139" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.784s"><rect x="19" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.792s"><rect x="67" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.800s"><rect x="115" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.808s"><rect x="163" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.816s"><rect x="211" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.824s"><rect x="259" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.832s"><rect x="307" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.840s"><rect x="355" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.848s"><rect x="403" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.856s"><rect x="451" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.864s"><rect x="499" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.872s"><rect x="547" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.880s"><rect x="595" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.888s"><rect x="643" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.896s"><rect x="691" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.904s"><rect x="739" y="152" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="152" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="183" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.912s"><rect x="19" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.920s"><rect x="67" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.928s"><rect x="115" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.936s"><rect x="163" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.944s"><rect x="211" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.952s"><rect x="259" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.960s"><rect x="307" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.968s"><rect x="355" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.976s"><rect x="403" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.984s"><rect x="451" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:0.992s"><rect x="499" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.000s"><rect x="547" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.008s"><rect x="595" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.016s"><rect x="643" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.024s"><rect x="691" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.032s"><rect x="739" y="260" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="260" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="291" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.040s"><rect x="19" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.048s"><rect x="67" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.056s"><rect x="115" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.064s"><rect x="163" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.072s"><rect x="211" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.080s"><rect x="259" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.088s"><rect x="307" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.096s"><rect x="355" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.104s"><rect x="403" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.112s"><rect x="451" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.120s"><rect x="499" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.128s"><rect x="547" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.136s"><rect x="595" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.144s"><rect x="643" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.152s"><rect x="691" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.160s"><rect x="739" y="304" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="304" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="335" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.168s"><rect x="19" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.176s"><rect x="67" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.184s"><rect x="115" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.192s"><rect x="163" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.200s"><rect x="211" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.208s"><rect x="259" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.216s"><rect x="307" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.224s"><rect x="355" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.232s"><rect x="403" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.240s"><rect x="451" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.248s"><rect x="499" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.256s"><rect x="547" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.264s"><rect x="595" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.272s"><rect x="643" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.280s"><rect x="691" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.288s"><rect x="739" y="348" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="348" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="379" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.296s"><rect x="19" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="19" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="19" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.304s"><rect x="67" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="67" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="67" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.312s"><rect x="115" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="115" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="115" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.320s"><rect x="163" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="163" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="163" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.328s"><rect x="211" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="211" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="211" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.336s"><rect x="259" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="259" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="259" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.344s"><rect x="307" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="307" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="307" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.352s"><rect x="355" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="355" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="355" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.360s"><rect x="403" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="403" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="403" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.368s"><rect x="451" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="451" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="451" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.376s"><rect x="499" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="499" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="499" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.384s"><rect x="547" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="547" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="547" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.392s"><rect x="595" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="595" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="595" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.400s"><rect x="643" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="643" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="643" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.408s"><rect x="691" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="691" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="691" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><g class="cg-pop" style="--d:1.416s"><rect x="739" y="392" width="42" height="38" style="fill:var(--accent)"/><rect x="739" y="392" width="42" height="5" style="fill:var(--navy)"/><rect x="739" y="423" width="42" height="7" style="fill:var(--blue-soft)"/></g><rect class="cg-pop" style="--d:1.5s;fill:var(--blue-soft);stroke:var(--blue);stroke-width:2" x="19" y="198" width="762" height="54"/><text class="svg-lbl" x="400" y="234" text-anchor="middle" style="font-size:24px">L2 · 72 MB</text></svg></div>
+  </div>
+  <p class="cg-key"><span><i style="background:var(--navy)"></i>control</span><span><i style="background:var(--accent)"></i>cálculo (ALU)</span><span><i style="background:var(--blue-soft);border:2px solid var(--blue)"></i>caché</span></p>
+  <p class="fragment" data-step="1" style="margin-top:22px"><b>CPU:</b> mucho control y caché, para que cada núcleo termine su tarea lo antes posible.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px"><b>GPU:</b> el chip lleno de núcleos simples, para terminar miles de tareas a la vez.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. Los dibujos se arman solos al llegar.
+
+Mismo tamaño de chip, dos decisiones distintas. Los colores dicen en qué se gasta la superficie: azul oscuro es control (la unidad de control que vimos en la clase pasada: buscar, decodificar, adivinar saltos, reordenar instrucciones), naranja es cálculo (ALU) y celeste es caché.
+
+Clic 1, la CPU: un Ryzen 9 9950X tiene 16 núcleos grandes. Cada uno tiene mucha lógica de control y mucha caché (L1, L2 y una L3 de 64 MB compartida). Todo eso está para que un programa, que hace una cosa después de otra, termine lo antes posible.
+
+Clic 2, la GPU: una RTX 4090 tiene 128 bloques llamados SM (streaming multiprocessors), cada uno con 128 núcleos CUDA: 16 384 núcleos. Cada núcleo es mucho más simple que uno de CPU y va a menos GHz (~2,5 contra ~5), pero hay miles. Sirve cuando hay que hacer la misma cuenta millones de veces, como en cada píxel de una imagen.
+
+Los dibujos son esquemáticos: las proporciones de colores son ilustrativas, no medidas del chip real.
+  </aside>
+</section>
+<section class="slide" data-title="Dentro de una GPU">
+  <h2 class="title">¿Qué hay dentro de una GPU?</h2>
+  <div class="gi">
+    <svg class="gi-chip" viewBox="0 0 940 560" role="img" aria-label="Chip de una RTX 4090: 128 SM en naranja, la caché L2 en el medio, controladores de memoria a los lados y 12 chips de VRAM de 2 GB"><rect x="0" y="30" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="70" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="30" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="70" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 63 H112 M870 63 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="0" y="118" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="158" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="118" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="158" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 151 H112 M870 151 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="0" y="206" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="246" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="206" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="246" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 239 H112 M870 239 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="0" y="294" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="334" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="294" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="334" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 327 H112 M870 327 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="0" y="382" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="422" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="382" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="422" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 415 H112 M870 415 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="0" y="470" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="35" y="510" text-anchor="middle" style="font-size:18px">2 GB</text><rect x="870" y="470" width="70" height="66" style="fill:var(--navy)"/><text class="svg-lbl-light" x="905" y="510" text-anchor="middle" style="font-size:18px">2 GB</text><path class="gi-bus" d="M70 503 H112 M870 503 H828" style="fill:none;stroke:var(--accent);stroke-width:5"/><rect x="100" y="0" width="740" height="560" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/><rect x="112" y="16" width="26" height="528" style="fill:var(--slate)"/><rect x="802" y="16" width="26" height="528" style="fill:var(--slate)"/><rect x="152" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="20" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="76" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="132" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="188" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="322" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="378" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="434" width="35" height="50" style="fill:var(--accent)"/><rect x="152" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="192" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="232" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="272" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="312" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="352" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="392" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="432" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="472" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="512" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="552" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="592" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="632" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="672" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="712" y="490" width="35" height="50" style="fill:var(--accent)"/><rect x="752" y="490" width="35" height="50" style="fill:var(--accent)"/><rect class="gi-l2" x="152" y="250" width="635" height="58" style="fill:var(--blue-soft);stroke:var(--blue);stroke-width:2"/><text class="svg-lbl" x="470" y="287" text-anchor="middle" style="font-size:24px">L2 · 72 MB</text><rect class="gi-hl fragment" data-step="1" x="228" y="72" width="43" height="58" style="fill:none;stroke:var(--navy);stroke-width:5"/></svg>
+    <svg class="gi-sm fragment" data-step="1" viewBox="0 0 660 560" role="img" aria-label="Un SM por dentro: cuatro partes, cada una con 32 núcleos CUDA, un núcleo tensorial y 64 KB de registros; abajo 128 KB de L1 y memoria compartida"><rect x="4" y="4" width="652" height="552" style="fill:#FFFFFF;stroke:var(--navy);stroke-width:5"/><text class="svg-lbl" x="24" y="44" style="font-size:28px">Un SM</text><rect x="24" y="64" width="296" height="190" style="fill:var(--soft);stroke:var(--line);stroke-width:2"/><rect x="38" y="78" width="268" height="76" style="fill:var(--accent)"/><text class="svg-lbl-light" x="172" y="124" text-anchor="middle" style="font-size:22px">32 núcleos CUDA</text><rect x="38" y="166" width="128" height="74" style="fill:var(--navy)"/><text class="svg-lbl-light" x="102" y="198" text-anchor="middle" style="font-size:18px">núcleo</text><text class="svg-lbl-light" x="102" y="222" text-anchor="middle" style="font-size:18px">tensorial</text><rect x="178" y="166" width="128" height="74" style="fill:var(--blue)"/><text class="svg-lbl-light" x="242" y="198" text-anchor="middle" style="font-size:18px">registros</text><text class="svg-lbl-light" x="242" y="222" text-anchor="middle" style="font-size:18px">64 KB</text><rect x="340" y="64" width="296" height="190" style="fill:var(--soft);stroke:var(--line);stroke-width:2"/><rect x="354" y="78" width="268" height="76" style="fill:var(--accent)"/><text class="svg-lbl-light" x="488" y="124" text-anchor="middle" style="font-size:22px">32 núcleos CUDA</text><rect x="354" y="166" width="128" height="74" style="fill:var(--navy)"/><text class="svg-lbl-light" x="418" y="198" text-anchor="middle" style="font-size:18px">núcleo</text><text class="svg-lbl-light" x="418" y="222" text-anchor="middle" style="font-size:18px">tensorial</text><rect x="494" y="166" width="128" height="74" style="fill:var(--blue)"/><text class="svg-lbl-light" x="558" y="198" text-anchor="middle" style="font-size:18px">registros</text><text class="svg-lbl-light" x="558" y="222" text-anchor="middle" style="font-size:18px">64 KB</text><rect x="24" y="268" width="296" height="190" style="fill:var(--soft);stroke:var(--line);stroke-width:2"/><rect x="38" y="282" width="268" height="76" style="fill:var(--accent)"/><text class="svg-lbl-light" x="172" y="328" text-anchor="middle" style="font-size:22px">32 núcleos CUDA</text><rect x="38" y="370" width="128" height="74" style="fill:var(--navy)"/><text class="svg-lbl-light" x="102" y="402" text-anchor="middle" style="font-size:18px">núcleo</text><text class="svg-lbl-light" x="102" y="426" text-anchor="middle" style="font-size:18px">tensorial</text><rect x="178" y="370" width="128" height="74" style="fill:var(--blue)"/><text class="svg-lbl-light" x="242" y="402" text-anchor="middle" style="font-size:18px">registros</text><text class="svg-lbl-light" x="242" y="426" text-anchor="middle" style="font-size:18px">64 KB</text><rect x="340" y="268" width="296" height="190" style="fill:var(--soft);stroke:var(--line);stroke-width:2"/><rect x="354" y="282" width="268" height="76" style="fill:var(--accent)"/><text class="svg-lbl-light" x="488" y="328" text-anchor="middle" style="font-size:22px">32 núcleos CUDA</text><rect x="354" y="370" width="128" height="74" style="fill:var(--navy)"/><text class="svg-lbl-light" x="418" y="402" text-anchor="middle" style="font-size:18px">núcleo</text><text class="svg-lbl-light" x="418" y="426" text-anchor="middle" style="font-size:18px">tensorial</text><rect x="494" y="370" width="128" height="74" style="fill:var(--blue)"/><text class="svg-lbl-light" x="558" y="402" text-anchor="middle" style="font-size:18px">registros</text><text class="svg-lbl-light" x="558" y="426" text-anchor="middle" style="font-size:18px">64 KB</text><rect x="24" y="474" width="612" height="62" style="fill:var(--blue-soft);stroke:var(--blue);stroke-width:2"/><text class="svg-lbl" x="330" y="514" text-anchor="middle" style="font-size:22px">L1 / memoria compartida · 128 KB</text></svg>
+  </div>
+  <p style="margin-top:20px">Una RTX 4090 tiene <b>128 SM</b>: parecidos a un núcleo de CPU, pero cada uno con 128 núcleos simples.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px">La <b>L2</b> la comparten todos los SM. Afuera, 12 chips de GDDR6X: <b>24 GB por un bus de 384 bits</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. El chip es el de una RTX 4090, simplificado.
+
+Al llegar: los 128 rectángulos naranjas son los SM (streaming multiprocessors). Un SM es lo más parecido a un núcleo de CPU: tiene su propia unidad de control, sus registros y su caché L1. Pero adentro no hay una ALU sino 128.
+
+Clic 1, un SM por dentro: está partido en cuatro. Cada cuarto tiene 32 núcleos CUDA (ALU sencillas para sumar y multiplicar decimales), un núcleo tensorial (lo vemos en unas slides) y 64 KB de registros. Abajo, 128 KB de L1 que el programa también puede usar como «memoria compartida» entre los hilos del SM. Total por SM: 128 núcleos CUDA, 4 tensoriales, 256 KB de registros.
+
+Clic 2: en el medio, la caché L2 de 72 MB, compartida por todos los SM (la L3 de la CPU cumple el mismo papel). A los lados, los controladores de memoria, y afuera los 12 chips de GDDR6X de 2 GB: 24 GB conectados por 12 × 32 = 384 cables de datos. Es lo de «un bus muy ancho».
+
+Si preguntan: una H100 tiene 132 SM, 50 MB de L2 y 80 GB de HBM3; cada SM tiene 256 KB de L1.
+  </aside>
+</section>
+<section class="slide" data-title="Un warp">
+  <h2 class="title">Un warp: 32 hilos, una instrucción</h2>
+  <p class="lead">Cada hilo calcula el NDVI de un píxel. La GPU los agrupa de a 32.</p>
+  <div class="wp">
+    <div class="wp-list"><div class="wp-cur"></div><p>cargar nir</p><p>cargar red</p><p>restar</p><p>sumar</p><p>dividir</p><p>guardar ndvi</p></div>
+    <div class="wp-warp"><i><span>0</span></i><i><span>1</span></i><i><span>2</span></i><i><span>3</span></i><i><span>4</span></i><i><span>5</span></i><i><span>6</span></i><i><span>7</span></i><i><span>8</span></i><i><span>9</span></i><i><span>10</span></i><i><span>11</span></i><i><span>12</span></i><i><span>13</span></i><i><span>14</span></i><i><span>15</span></i><i><span>16</span></i><i><span>17</span></i><i><span>18</span></i><i><span>19</span></i><i><span>20</span></i><i><span>21</span></i><i><span>22</span></i><i><span>23</span></i><i><span>24</span></i><i><span>25</span></i><i><span>26</span></i><i><span>27</span></i><i><span>28</span></i><i><span>29</span></i><i><span>30</span></i><i><span>31</span></i></div>
+  </div>
+  <p class="fragment" data-step="1" style="margin-top:28px">El SM manda <b>una instrucción a los 32 hilos a la vez</b>. Es la idea de SIMD de la clase pasada: AVX2 hace 8 a la vez; un warp, 32.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px">Si un <code class="wp-code">if</code> separa al warp (píxeles con nube y sin nube), se hace una rama y después la otra: <b>mientras tanto, parte del warp espera</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. La animación corre sola: a la izquierda avanza la instrucción actual; a la derecha, los 32 hilos del warp se encienden juntos en cada paso.
+
+En la GPU no se programa píxel por píxel con un for: se escribe el código para un solo píxel y se lanzan millones de hilos, uno por píxel. El hardware los agrupa de a 32: eso es un warp.
+
+Clic 1: el SM no le da una instrucción a cada hilo por separado; le da la misma instrucción a los 32 hilos del warp, cada uno con su propio píxel. Es la misma idea que SIMD (AVX2 hacía 8 a la vez), pero más ancha y escondida: el programador escribe código para un hilo y la GPU lo ejecuta de a 32. NVIDIA lo llama SIMT (single instruction, multiple threads).
+
+Clic 2, la trampa: si dentro del warp hay un if y unos hilos van por un lado y otros por el otro (por ejemplo, píxeles con nube y sin nube), el warp ejecuta primero una rama con unos hilos apagados y después la otra. Eso se llama divergencia y puede dejar a la GPU trabajando a media capacidad. Con imágenes, donde casi todos los píxeles hacen lo mismo, normalmente no es un problema.
+  </aside>
+</section>
+<section class="slide" data-title="Esconder la espera">
+  <h2 class="title">La GPU no espera: cambia de warp</h2>
+  <p class="lead">Leer de la VRAM tarda cientos de ciclos. Mientras un warp espera, el SM trabaja con otro.</p>
+  <svg class="lh-svg" viewBox="0 0 1664 400" role="img" aria-label="Línea de tiempo: con un solo warp la ALU pasa casi todo el tiempo esperando; con ocho warps alternándose, la ALU está siempre ocupada"><text class="svg-lbl" x="0" y="22" style="font-size:26px">Un SM con 1 warp</text><text class="svg-lbl" x="240" y="60" text-anchor="end" style="font-size:22px">warp 1</text><rect x="260" y="34" width="46" height="30" style="fill:var(--accent)"/><rect x="306" y="34" width="322" height="30" style="fill:#E4E8EC"/><rect x="628" y="34" width="46" height="30" style="fill:var(--accent)"/><rect x="674" y="34" width="322" height="30" style="fill:#E4E8EC"/><rect x="996" y="34" width="46" height="30" style="fill:var(--accent)"/><rect x="1042" y="34" width="322" height="30" style="fill:#E4E8EC"/><rect x="1364" y="34" width="46" height="30" style="fill:var(--accent)"/><rect x="1410" y="34" width="230" height="30" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="96" text-anchor="end" style="font-size:22px">ALU</text><rect x="260" y="70" width="1380" height="30" style="fill:none;stroke:var(--line);stroke-width:2"/><rect x="260" y="70" width="46" height="30" style="fill:var(--navy)"/><rect x="628" y="70" width="46" height="30" style="fill:var(--navy)"/><rect x="996" y="70" width="46" height="30" style="fill:var(--navy)"/><rect x="1364" y="70" width="46" height="30" style="fill:var(--navy)"/><text class="svg-lbl" x="0" y="150" style="font-size:26px">Un SM con 8 warps</text><text class="svg-lbl" x="240" y="176" text-anchor="end" style="font-size:18px">warp 1</text><rect x="260" y="162" width="46" height="18" style="fill:var(--accent)"/><rect x="306" y="162" width="322" height="18" style="fill:#E4E8EC"/><rect x="628" y="162" width="46" height="18" style="fill:var(--accent)"/><rect x="674" y="162" width="322" height="18" style="fill:#E4E8EC"/><rect x="996" y="162" width="46" height="18" style="fill:var(--accent)"/><rect x="1042" y="162" width="322" height="18" style="fill:#E4E8EC"/><rect x="1364" y="162" width="46" height="18" style="fill:var(--accent)"/><rect x="1410" y="162" width="230" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="200" text-anchor="end" style="font-size:18px">warp 2</text><rect x="306" y="186" width="46" height="18" style="fill:var(--accent)"/><rect x="352" y="186" width="322" height="18" style="fill:#E4E8EC"/><rect x="674" y="186" width="46" height="18" style="fill:var(--accent)"/><rect x="720" y="186" width="322" height="18" style="fill:#E4E8EC"/><rect x="1042" y="186" width="46" height="18" style="fill:var(--accent)"/><rect x="1088" y="186" width="322" height="18" style="fill:#E4E8EC"/><rect x="1410" y="186" width="46" height="18" style="fill:var(--accent)"/><rect x="1456" y="186" width="184" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="224" text-anchor="end" style="font-size:18px">warp 3</text><rect x="352" y="210" width="46" height="18" style="fill:var(--accent)"/><rect x="398" y="210" width="322" height="18" style="fill:#E4E8EC"/><rect x="720" y="210" width="46" height="18" style="fill:var(--accent)"/><rect x="766" y="210" width="322" height="18" style="fill:#E4E8EC"/><rect x="1088" y="210" width="46" height="18" style="fill:var(--accent)"/><rect x="1134" y="210" width="322" height="18" style="fill:#E4E8EC"/><rect x="1456" y="210" width="46" height="18" style="fill:var(--accent)"/><rect x="1502" y="210" width="138" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="248" text-anchor="end" style="font-size:18px">warp 4</text><rect x="398" y="234" width="46" height="18" style="fill:var(--accent)"/><rect x="444" y="234" width="322" height="18" style="fill:#E4E8EC"/><rect x="766" y="234" width="46" height="18" style="fill:var(--accent)"/><rect x="812" y="234" width="322" height="18" style="fill:#E4E8EC"/><rect x="1134" y="234" width="46" height="18" style="fill:var(--accent)"/><rect x="1180" y="234" width="322" height="18" style="fill:#E4E8EC"/><rect x="1502" y="234" width="46" height="18" style="fill:var(--accent)"/><rect x="1548" y="234" width="92" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="272" text-anchor="end" style="font-size:18px">warp 5</text><rect x="444" y="258" width="46" height="18" style="fill:var(--accent)"/><rect x="490" y="258" width="322" height="18" style="fill:#E4E8EC"/><rect x="812" y="258" width="46" height="18" style="fill:var(--accent)"/><rect x="858" y="258" width="322" height="18" style="fill:#E4E8EC"/><rect x="1180" y="258" width="46" height="18" style="fill:var(--accent)"/><rect x="1226" y="258" width="322" height="18" style="fill:#E4E8EC"/><rect x="1548" y="258" width="46" height="18" style="fill:var(--accent)"/><rect x="1594" y="258" width="46" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="296" text-anchor="end" style="font-size:18px">warp 6</text><rect x="490" y="282" width="46" height="18" style="fill:var(--accent)"/><rect x="536" y="282" width="322" height="18" style="fill:#E4E8EC"/><rect x="858" y="282" width="46" height="18" style="fill:var(--accent)"/><rect x="904" y="282" width="322" height="18" style="fill:#E4E8EC"/><rect x="1226" y="282" width="46" height="18" style="fill:var(--accent)"/><rect x="1272" y="282" width="322" height="18" style="fill:#E4E8EC"/><rect x="1594" y="282" width="46" height="18" style="fill:var(--accent)"/><text class="svg-lbl" x="240" y="320" text-anchor="end" style="font-size:18px">warp 7</text><rect x="536" y="306" width="46" height="18" style="fill:var(--accent)"/><rect x="582" y="306" width="322" height="18" style="fill:#E4E8EC"/><rect x="904" y="306" width="46" height="18" style="fill:var(--accent)"/><rect x="950" y="306" width="322" height="18" style="fill:#E4E8EC"/><rect x="1272" y="306" width="46" height="18" style="fill:var(--accent)"/><rect x="1318" y="306" width="322" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="344" text-anchor="end" style="font-size:18px">warp 8</text><rect x="582" y="330" width="46" height="18" style="fill:var(--accent)"/><rect x="628" y="330" width="322" height="18" style="fill:#E4E8EC"/><rect x="950" y="330" width="46" height="18" style="fill:var(--accent)"/><rect x="996" y="330" width="322" height="18" style="fill:#E4E8EC"/><rect x="1318" y="330" width="46" height="18" style="fill:var(--accent)"/><rect x="1364" y="330" width="276" height="18" style="fill:#E4E8EC"/><text class="svg-lbl" x="240" y="386" text-anchor="end" style="font-size:22px">ALU</text><rect x="260" y="360" width="1380" height="30" style="fill:var(--navy)"/><rect class="lh-mask" x="258" y="30" width="1386" height="364" style="fill:var(--bg)"/></svg>
+  <p class="lh-key"><span><i style="background:var(--accent)"></i>calcula</span><span><i style="background:#E4E8EC"></i>espera un dato de la VRAM</span><span><i style="background:var(--navy)"></i>ALU ocupada</span></p>
+  <p class="fragment" data-step="1" style="margin-top:14px">Cambiar de warp no cuesta nada: <b>los registros de todos los warps ya están en el SM</b>.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px">La CPU evita la espera con cachés grandes; la GPU, con <b>miles de hilos</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. La línea de tiempo se dibuja sola de izquierda a derecha y se repite.
+
+Arriba, un SM con un solo warp: calcula un poquito (naranja) y después tiene que esperar cientos de ciclos a que llegue el siguiente dato de la VRAM (gris). La ALU (abajo, azul oscuro) pasa casi todo el tiempo parada. Es lo mismo que le pasaba a la CPU con la RAM, pero sin cachés grandes que la salven.
+
+Abajo, el mismo SM con 8 warps: cuando el warp 1 se pone a esperar, el SM pasa al warp 2; cuando ese espera, al 3; y así. Para cuando le toca otra vez al warp 1, su dato ya llegó. La ALU no para nunca.
+
+Clic 1: cambiar de warp es gratis porque cada warp tiene sus propios registros guardados en el SM todo el tiempo (por eso un SM tiene 256 KB de registros, más que su L1). Un SM de una RTX 4090 puede tener hasta 48 warps vivos a la vez (1 536 hilos); en una H100, hasta 64.
+
+Clic 2: es la diferencia de fondo entre las dos. La CPU apuesta a no esperar: cachés grandes y control sofisticado. La GPU apuesta a tener siempre otro trabajo listo. Por eso una GPU con pocos hilos (una imagen chiquita, o un for que la llama de a poquito) rinde muy poco.
+  </aside>
+</section>
+<section class="slide" data-title="La memoria rápida del chip">
+  <h2 class="title">La GPU gasta su memoria rápida en registros</h2>
+  <p class="lead">Memoria dentro del chip, sumando todos los núcleos o todos los SM.</p>
+  <p class="gm-h">CPU · Ryzen 9 9950X</p>
+  <div class="gm-row"><p>Registros</p><div class="gm-bar"><i style="--w:6px;--d:0.00s"></i><span>menos de 1 MB</span></div></div><div class="gm-row"><p>L1</p><div class="gm-bar"><i style="--w:18px;--d:0.25s"></i><span>1,3 MB</span></div></div><div class="gm-row"><p>L2</p><div class="gm-bar"><i style="--w:222px;--d:0.50s"></i><span>16 MB</span></div></div><div class="gm-row"><p>L3</p><div class="gm-bar"><i style="--w:890px;--d:0.75s"></i><span>64 MB</span></div></div>
+  <p class="gm-h" style="margin:30px 0 10px !important">GPU · RTX 4090</p>
+  <div class="gm-row"><p>Registros</p><div class="gm-bar"><i style="--w:445px;--d:0.00s"></i><span>32 MB</span></div></div><div class="gm-row"><p>L1 / compartida</p><div class="gm-bar"><i style="--w:222px;--d:0.25s"></i><span>16 MB</span></div></div><div class="gm-row"><p>L2</p><div class="gm-bar"><i style="--w:1001px;--d:0.50s"></i><span>72 MB</span></div></div>
+  <p class="fragment" data-step="1" style="margin-top:26px">En la GPU los registros ocupan <b>más que toda la L1</b>: así cada warp tiene los suyos listos y cambiar de uno a otro no cuesta nada.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Un clic. Las barras crecen solas y están a la misma escala.
+
+La CPU pone casi toda su memoria rápida en cachés (L2 y sobre todo L3) y muy poca en registros: cada núcleo tiene unas pocas decenas de registros visibles para el programa (y unos cientos internos), en total menos de 1 MB en todo el chip.
+
+La GPU hace lo contrario: 128 SM × 256 KB = 32 MB de registros, el doble que toda su L1 (128 SM × 128 KB = 16 MB). Es lo que permite tener decenas de warps vivos en cada SM, cada uno con sus registros, y saltar de uno a otro sin copiar nada.
+
+Valores: Ryzen 9 9950X: L1 de 48 KB de datos + 32 KB de instrucciones por núcleo, 1 MB de L2 por núcleo, 64 MB de L3. RTX 4090: 256 KB de registros y 128 KB de L1 por SM, 72 MB de L2. Los registros de la CPU son una estimación (los fabricantes no los publican con detalle).
+
+Fuera del chip quedan la RAM (CPU) y la VRAM (GPU), que ya vimos.
+  </aside>
+</section>
+<section class="slide" data-title="¿Siempre conviene la GPU?">
+  <h2 class="title">¿Siempre conviene la GPU?</h2>
+  <p class="lead">NDVI de una escena Sentinel-2 completa: 10 980 × 10 980 píxeles, ~1 GB de datos.</p>
+  <div class="gc">
+    <div class="gc-row"><p>CPU, 16 núcleos</p><div class="gc-track"><i class="gc-seg" style="--w:288px;--t:1.28s;--d:0s;background:var(--navy)"></i></div><p class="gc-t" style="--d:1.28s">16 ms</p></div>
+    <div class="gc-row"><p>GPU, datos en la RAM</p><div class="gc-track"><i class="gc-seg" style="--w:702px;--t:3.12s;--d:0s;background:var(--slate)"></i><i class="gc-seg" style="--w:27px;--t:.12s;--d:3.12s;background:var(--accent)"></i><i class="gc-seg" style="--w:342px;--t:1.52s;--d:3.24s;background:var(--slate)"></i></div><p class="gc-t" style="--d:4.76s">60 ms</p></div>
+    <div class="gc-row"><p>GPU, datos ya en la VRAM</p><div class="gc-track"><i class="gc-seg" style="--w:27px;--t:.12s;--d:0s;background:var(--accent)"></i></div><p class="gc-t" style="--d:.12s">1,5 ms</p></div>
+  </div>
+  <p class="gc-key"><span><i style="background:var(--slate)"></i>cruzar PCIe (ida y vuelta)</span><span><i style="background:var(--accent)"></i>calcular en la GPU</span><span><i style="background:var(--navy)"></i>calcular en la CPU</span></p>
+  <p class="fragment" data-step="1" style="margin-top:22px">Para una cuenta simple, <b>cruzar PCIe cuesta más que calcular</b>.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px">La GPU gana cuando los datos se quedan en la VRAM, o cuando la cuenta es pesada: muchas operaciones por cada número que se trae.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. Las barras corren solas al llegar, a escala: en la animación, 1 ms real son 0,08 s.
+
+La cuenta: la escena tiene 120 millones de píxeles. Dos bandas en float32 son 2 × 482 MB ≈ 1 GB de entrada, y el resultado otros 482 MB. El NDVI es una cuenta muy simple (una resta, una suma y una división por píxel), así que lo que manda es cuánto tarda en moverse la memoria.
+
+- CPU de 16 núcleos: mover 1,45 GB por la RAM a ~90 GB/s → ~16 ms.
+- GPU con los datos en la RAM: primero cruzar 964 MB por PCIe 4.0 a ~25 GB/s (~39 ms), calcular en la VRAM a ~1 TB/s (~1,5 ms) y devolver el resultado (~19 ms): ~60 ms. ¡Casi 4 veces más lento que la CPU!
+- GPU con los datos ya en la VRAM: ~1,5 ms, diez veces más rápido que la CPU.
+
+Clic 1: para cuentas simples el viaje cuesta más que el trabajo.
+
+Clic 2: la GPU gana en dos casos. Uno, cuando los datos se quedan en la VRAM y se les hacen muchas cosas seguidas (cargar una vez, calcular cien veces). Dos, cuando la cuenta es pesada en relación con los datos: por ejemplo, multiplicar matrices, donde cada número que se trae se usa cientos de veces. A esa relación se le llama intensidad aritmética.
+
+Si preguntan: en la práctica las bandas de Sentinel-2 vienen en uint16 (la mitad de bytes), y se puede solapar la copia con el cálculo; los números cambian, la conclusión no.
+  </aside>
+</section>
+<section class="slide" data-title="Núcleos tensoriales">
+  <h2 class="title">Núcleos tensoriales: multiplicar matrices de una vez</h2>
+  <div class="tc">
+    <div class="tc-left">
+      <div><p class="tc-h">Núcleos normales<span>64 multiplicaciones y sumas, una por una</span></p><div class="tc-grid tc-n"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i><i style="--k:6"></i><i style="--k:7"></i><i style="--k:8"></i><i style="--k:9"></i><i style="--k:10"></i><i style="--k:11"></i><i style="--k:12"></i><i style="--k:13"></i><i style="--k:14"></i><i style="--k:15"></i></div><p class="tc-cnt"><b class="tc-k"></b> pasos</p></div>
+      <div><p class="tc-h">Núcleo tensorial<span>las 64 en una sola instrucción</span></p><div class="tc-grid tc-t"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p class="tc-cnt"><b>1</b> paso</p></div>
+    </div>
+    <div class="tc-right">
+      <p class="tc-h">H100: billones de operaciones por segundo (TFLOPS)</p><div class="tc-row"><p>FP32, núcleos CUDA</p><div class="tc-bar"><i style="--w:17px;--d:0.0s"></i><span>67</span></div></div><div class="tc-row"><p>TF32, tensoriales</p><div class="tc-bar"><i style="--w:124px;--d:0.3s"></i><span>495</span></div></div><div class="tc-row"><p>BF16, tensoriales</p><div class="tc-bar"><i style="--w:247px;--d:0.6s"></i><span>989</span></div></div><div class="tc-row"><p>FP8, tensoriales</p><div class="tc-bar"><i style="--w:495px;--d:0.9s"></i><span>1 979</span></div></div>
+    </div>
+  </div>
+  <p class="fragment" data-step="1" style="margin-top:30px">Multiplicar matrices es la cuenta central de las redes neuronales: <b>por eso las GPU modernas traen estos núcleos</b>.</p>
+  <p class="fragment" data-step="2" style="margin-top:8px">Rinden más con números de <b>16 u 8 bits</b>: menos precisión, mucha más velocidad.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics. Las dos cuadrículas se llenan solas y se repiten; las barras crecen al llegar.
+
+Izquierda: el resultado de multiplicar dos matrices de 4 × 4 es otra de 4 × 4, y cada casilla necesita 4 multiplicaciones y 4 sumas: 64 en total. Con núcleos normales eso son 64 instrucciones de multiplicar y sumar (FMA), una tras otra; la cuadrícula se va llenando de a poco. Un núcleo tensorial hace la operación completa en una instrucción: la cuadrícula se llena de golpe. (El tamaño real del bloque cambia según la generación; 4 × 4 es la idea original de 2017.)
+
+Derecha, una H100 en TFLOPS (billones de operaciones por segundo, sin contar la «dispersión»):
+- FP32 en los núcleos CUDA normales: ~67.
+- TF32 en los tensoriales: ~495. Es un formato de 19 bits que la GPU usa por dentro cuando se le pasa float32.
+- BF16 (16 bits): ~989.
+- FP8 (8 bits): ~1 979.
+Treinta veces más que los núcleos normales.
+
+Clic 1: las redes neuronales son, sobre todo, multiplicaciones de matrices enormes; por eso NVIDIA agregó estos núcleos desde 2017 (Volta) y por eso dominan este campo.
+
+Clic 2: con menos bits por número caben más números en cada registro y en cada viaje a la memoria, y los circuitos son más chicos. Se pierde precisión: float32 tiene ~7 dígitos significativos; BF16, ~3. Para muchos cálculos con imágenes alcanza; para otros no.
+
+En una RTX 4090: ~83 TFLOPS en FP32 y ~165 en FP16 con los tensoriales.
+  </aside>
+</section>
+<section class="slide" data-title="¿Qué GPU tengo?">
+  <h2 class="title">¿Qué GPU tengo y qué está haciendo?</h2>
+  <div class="smi">
+    <i class="fragment smi-m1" data-step="1"></i><i class="fragment smi-m2" data-step="2"></i><i class="fragment smi-m3" data-step="3"></i><i class="fragment smi-m4" data-step="4"></i>
+    <p class="smi-cmd">$ nvidia-smi</p>
+<pre class="smi-out"><span class="smi-dim">+-----------------------------------------------------------------------------------------+</span>
+| NVIDIA-SMI 550.54.15         <span class="f1">Driver Version: 550.54.15     CUDA Version: 12.4</span>     |
+<span class="smi-dim">|-----------------------------------------+------------------------+----------------------+</span>
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+<span class="smi-dim">|=========================================+========================+======================|</span>
+|   0  <span class="f1">NVIDIA GeForce RTX 4090</span>        Off |   00000000:01:00.0 Off |                  Off |
+| 30%   <span class="f4">61C</span>    P2            <span class="f4">312W /  450W</span> |    <span class="f2">18542MiB /  24564MiB</span> |     <span class="f3">97%</span>      Default |
+<span class="smi-dim">+-----------------------------------------+------------------------+----------------------+</span></pre>
+    <ol class="smi-list">
+      <li class="fragment" data-step="1">Qué GPU es, y las versiones del driver y de CUDA.</li>
+      <li class="fragment" data-step="2"><b>Memory-Usage</b>: VRAM ocupada / total. Si se llena, el programa se cae.</li>
+      <li class="fragment" data-step="3"><b>GPU-Util</b>: el % del tiempo en que la GPU estuvo haciendo algo. No es el % de núcleos ocupados.</li>
+      <li class="fragment" data-step="4">Temperatura y consumo: una RTX 4090 puede gastar 450 W.</li>
+    </ol>
+  </div>
+  <p class="small" style="margin-top:22px">Para verlo en vivo: <span class="ve-code">nvidia-smi -l 1</span>. En Colab: <span class="ve-code">!nvidia-smi</span>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Cuatro clics; cada uno marca una parte de la salida. Es un ejemplo de cómo se ve con una RTX 4090 trabajando.
+
+nvidia-smi viene con los drivers de NVIDIA, en Linux y en Windows. Es lo primero que hay que correr en una máquina nueva o en Colab.
+
+1. El nombre de la GPU y las versiones del driver y de CUDA. «CUDA Version» es la versión máxima que soporta ese driver, no necesariamente la que está instalada.
+2. Memory-Usage: cuánta VRAM está ocupada y cuánta hay. Cuando un programa pide más de la que queda, falla con un error de memoria insuficiente.
+3. GPU-Util: el porcentaje del tiempo, en el último instante medido, en que la GPU estuvo ejecutando algo. Ojo: 100 % no quiere decir que los 16 384 núcleos estén trabajando; puede ser un programa que usa una fracción de la GPU todo el tiempo. Un número bajo, en cambio, casi siempre significa que la GPU espera datos (del disco, de la CPU o de PCIe): el problema de toda la clase.
+4. Temperatura y consumo: sirven para ver si la GPU está trabajando de verdad (consumo alto) o si se está calentando y bajando la velocidad.
+
+nvidia-smi -l 1 repite la medición cada segundo; en Linux también se puede usar watch -n 1 nvidia-smi.
+  </aside>
+</section>
+
+<!-- ===================== CIERRE ===================== -->
+
+<section class="slide orange" data-title="El camino completo">
+  <p class="eyebrow">Resumen</p>
+  <h1 class="st-title">El camino<br>completo</h1>
+  <div class="chain">
+    <p class="link rise" style="--i:0">Disco</p><p class="arrow rise" style="--i:0">→</p>
+    <p class="link rise" style="--i:1">RAM</p><p class="arrow rise" style="--i:1">→</p>
+    <p class="link rise" style="--i:2">CPU</p><p class="arrow rise" style="--i:2">→</p>
+    <p class="link rise" style="--i:3">PCIe</p><p class="arrow rise" style="--i:3">→</p>
+    <p class="link rise" style="--i:4">VRAM</p><p class="arrow rise" style="--i:4">→</p>
+    <p class="link gpu rise" style="--i:5">GPU</p>
+  </div>
+  <p class="st-sub">Del disco a la GPU, eslabón por eslabón.</p>
+  <aside class="notes">
+Cierre de las dos clases. Recorrer la cadena una última vez:
+
+- Disco: el tipo importa (HDD, SATA, NVMe), pero con muchos archivos chicos manda el sistema operativo. Pocos archivos grandes.
+- RAM: la mesa de trabajo. Lo que ya se leyó queda en la RAM; si se acaba, swap y todo se congela.
+- CPU: instrucciones simples al ritmo del reloj, con SIMD y cachés para no esperar a la RAM. Leer en orden.
+- PCIe: el tramo más estrecho. Cruzarlo pocas veces y dejar los datos del otro lado.
+- VRAM: pegada a la GPU, con un bus enorme.
+- GPU: miles de núcleos simples que esconden la espera con miles de hilos. Gana cuando los datos se quedan en la VRAM y la cuenta es pesada.
+
+Como en cualquier cadena, la velocidad la marca el eslabón más lento: antes de comprar una GPU más grande, hay que mirar si los datos le llegan a tiempo.
+
+Abrir preguntas.
+  </aside>
+</section>
+
+
+</main>
+
+<div class="progress" id="progress"></div>
+<div class="tools" id="tools" aria-label="Lápiz">
+  <button type="button" class="sw" data-color="auto" title="Color automático" style="background:linear-gradient(135deg,#1A1A1A 50%,#F5F3EE 50%)"></button>
+  <button type="button" class="sw" data-color="naranja" title="Naranja" style="background:#D9692A"></button>
+  <button type="button" class="sw" data-color="azul" title="Azul" style="background:#2D6A9F"></button>
+  <button type="button" class="sw" data-color="blanco" title="Blanco" style="background:#F5F3EE"></button>
+  <button type="button" class="tb" data-act="width" title="Grosor (W)">Grosor</button>
+  <button type="button" class="tb" data-act="undo" title="Deshacer (Z)">Deshacer</button>
+  <button type="button" class="tb" data-act="clear" title="Borrar (C)">Borrar</button>
+</div>
+<nav class="nav" aria-label="Navegación">
+  <button type="button" data-act="prev" title="Anterior">←</button>
+  <button type="button" data-act="next" title="Siguiente">→</button>
+  <button type="button" data-act="overview" title="Ver todas (O)">O</button>
+  <button type="button" data-act="notes" title="Notas (S)">S</button>
+  <button type="button" data-act="full" title="Pantalla completa (F)">F</button>
+  <button type="button" data-act="help" title="Teclas (?)">?</button>
+</nav>
+<div class="blackout"></div>
+<div class="help" id="help">
+  <div class="help-box">
+    <h2>Teclas</h2>
+    <table>
+      <tr><td>→ Espacio</td><td>Siguiente</td></tr>
+      <tr><td>←</td><td>Anterior</td></tr>
+      <tr><td>S</td><td>Notas del orador</td></tr>
+      <tr><td>O</td><td>Ver todas las slides</td></tr>
+      <tr><td>F</td><td>Pantalla completa</td></tr>
+      <tr><td>B</td><td>Pantalla en negro</td></tr>
+      <tr><td>D</td><td>Lápiz (Z deshace, C borra)</td></tr>
+      <tr><td>1 5 Enter</td><td>Ir a la slide 15</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const deck = document.getElementById('deck');
+  const bar = document.getElementById('progress');
+  const tools = document.getElementById('tools');
+  const body = document.body;
+  const slides = Array.from(deck.querySelectorAll(':scope > section.slide'));
+
+  const frames = slides.map((s, i) => {
+    const f = document.createElement('div');
+    f.className = 'frame';
+    s.before(f);
+    f.appendChild(s);
+    const pg = s.querySelector(':scope > .foot');
+    if (pg) pg.textContent = i + 1;
+    f.addEventListener('click', () => { if (body.classList.contains('overview')) { go(i, 0); overview(false); } });
+    return f;
+  });
+
+  const steps = slides.map(s => {
+    const fr = Array.from(s.querySelectorAll('.fragment'));
+    fr.forEach((f, k) => { if (!f.dataset.step) f.dataset.step = k + 1; });
+    return Array.from(new Set(fr.map(f => +f.dataset.step))).sort((a, b) => a - b);
+  });
+
+  let cur = 0, step = 0;
+
+  function render() {
+    slides.forEach((s, i) => {
+      const on = i === cur;
+      s.classList.toggle('active', on);
+      frames[i].classList.toggle('current', on);
+      s.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    const lim = step ? steps[cur][step - 1] : 0;
+    slides[cur].querySelectorAll('.fragment').forEach(f => f.classList.toggle('visible', +f.dataset.step <= lim));
+    bar.style.width = ((cur + 1) / slides.length * 100) + '%';
+    const h = '#' + (cur + 1);
+    if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) { location.replace(h); } }
+    syncPen();
+    updateNotes();
+  }
+  function go(i, s) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    step = s === 'all' ? steps[cur].length : 0;
+    render();
+    if (body.classList.contains('overview')) frames[cur].scrollIntoView({ block: 'nearest' });
+  }
+  function next() { if (step < steps[cur].length) { step++; render(); } else if (cur < slides.length - 1) go(cur + 1, 0); }
+  function prev() { if (step > 0) { step--; render(); } else if (cur > 0) go(cur - 1, 'all'); }
+
+  function fit() {
+    const k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.documentElement.style.setProperty('--scale', k);
+  }
+  function overview(on) {
+    const v = on === undefined ? !body.classList.contains('overview') : on;
+    body.classList.toggle('overview', v);
+    syncPen();
+    if (v) frames[cur].scrollIntoView({ block: 'center' });
+  }
+  function fullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  }
+  function black() { body.classList.toggle('black'); }
+  function help(on) { body.classList.toggle('show-help', on === undefined ? !body.classList.contains('show-help') : on); }
+
+  // Lápiz
+  const COLORS = { naranja: '#D9692A', azul: '#2D6A9F', blanco: '#F5F3EE', tinta: '#1A1A1A' };
+  const WIDTHS = [4, 7, 14];
+  let penOn = false, penColor = 'auto', penWidth = 1;
+  const boards = new Map();
+  function pt(c, e) { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * 1920 / r.width, (e.clientY - r.top) * 1080 / r.height]; }
+  function paint(ctx, st) { ctx.strokeStyle = ctx.fillStyle = st.color; ctx.lineWidth = st.width; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; }
+  function dot(ctx, st, p) { paint(ctx, st); ctx.beginPath(); ctx.arc(p[0], p[1], st.width / 2, 0, Math.PI * 2); ctx.fill(); }
+  function seg(ctx, st, a, b) { paint(ctx, st); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+  function redraw(b) { b.ctx.clearRect(0, 0, 1920, 1080); b.strokes.forEach(st => { dot(b.ctx, st, st.pts[0]); for (let k = 1; k < st.pts.length; k++) seg(b.ctx, st, st.pts[k - 1], st.pts[k]); }); }
+  function colorFor(s) { if (penColor !== 'auto') return COLORS[penColor]; return s.matches('.orange') ? COLORS.tinta : COLORS.naranja; }
+  function board(s) {
+    let b = boards.get(s);
+    if (b) return b;
+    const c = document.createElement('canvas');
+    c.className = 'ink'; c.width = 1920; c.height = 1080;
+    s.insertBefore(c, s.querySelector(':scope > .notes'));
+    b = { c, ctx: c.getContext('2d'), strokes: [], cleared: null, live: null };
+    c.addEventListener('pointerdown', e => {
+      if (!body.classList.contains('pen') || e.button > 0) return;
+      e.preventDefault(); c.setPointerCapture(e.pointerId);
+      const p = pt(c, e);
+      b.live = { color: colorFor(s), width: WIDTHS[penWidth], pts: [p] };
+      b.strokes.push(b.live); b.cleared = null; dot(b.ctx, b.live, p);
+    });
+    c.addEventListener('pointermove', e => {
+      if (!b.live) return;
+      const p = pt(c, e), pts = b.live.pts, q = pts[pts.length - 1];
+      if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) < 1.5) return;
+      pts.push(p); seg(b.ctx, b.live, q, p);
+    });
+    const end = () => { if (b.live) { b.live = null; updateNotes(); } };
+    c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+    boards.set(s, b);
+    return b;
+  }
+  function syncPen() {
+    const on = !body.classList.contains('overview') && penOn;
+    body.classList.toggle('pen', on);
+    if (on) board(slides[cur]);
+    tools.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x.dataset.color === penColor));
+  }
+  function togglePen(v) { penOn = v === undefined ? !penOn : v; syncPen(); }
+  function undo() { const b = boards.get(slides[cur]); if (!b) return; if (b.strokes.length) b.strokes.pop(); else if (b.cleared) { b.strokes = b.cleared; b.cleared = null; } redraw(b); updateNotes(); }
+  function clearInk() { const b = boards.get(slides[cur]); if (!b || !b.strokes.length) return; b.cleared = b.strokes; b.strokes = []; redraw(b); updateNotes(); }
+  function nextWidth() { penWidth = (penWidth + 1) % WIDTHS.length; }
+  tools.querySelectorAll('.sw').forEach(x => x.addEventListener('click', e => { e.stopPropagation(); penColor = x.dataset.color; syncPen(); x.blur(); }));
+
+  // Notas del orador
+  let nw = null, t0 = Date.now(), timer = 0;
+  function openNotes() {
+    if (nw && !nw.closed) { nw.focus(); return; }
+    nw = window.open('', 'notas-orador', 'width=1120,height=780');
+    if (!nw) { alert('El navegador bloqueó la ventana de notas. Permite ventanas emergentes para este archivo y pulsa S otra vez.'); return; }
+    const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('');
+    nw.document.open();
+    nw.document.write('<!doctype html><html lang="es" class="speaker-root"><head><meta charset="utf-8"><title>Notas · ' + document.title + '</title>' + styles + '</head><body class="speaker">' +
+      '<div class="sp-top"><span id="sp-count"></span><span class="sp-title" id="sp-title"></span>' +
+      '<span class="sp-clock"><span class="sp-time" id="sp-time">00:00</span><button type="button" id="sp-reset">Reiniciar</button><span class="sp-now" id="sp-now"></span></span></div>' +
+      '<div class="sp-grid"><div><p class="sp-label">AHORA</p><div class="sp-view" id="sp-cur"></div><p class="sp-steps" id="sp-steps"></p></div>' +
+      '<div><p class="sp-label">SIGUIENTE</p><div class="sp-view sp-small" id="sp-next"></div></div></div>' +
+      '<div class="sp-notes" id="sp-notes"></div></body></html>');
+    nw.document.close();
+    nw.document.addEventListener('keydown', onKey);
+    nw.document.getElementById('sp-reset').addEventListener('click', () => { t0 = Date.now(); tick(); });
+    t0 = Date.now(); clearInterval(timer); timer = setInterval(tick, 1000); tick(); updateNotes();
+  }
+  function tick() {
+    if (!nw || nw.closed) { clearInterval(timer); return; }
+    const sec = Math.floor((Date.now() - t0) / 1000);
+    nw.document.getElementById('sp-time').textContent = String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+    const d = new Date();
+    nw.document.getElementById('sp-now').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  function preview(slide, allSteps) {
+    const c = nw.document.importNode(slide, true);
+    c.classList.add('active');
+    if (allSteps) c.querySelectorAll('.fragment').forEach(f => f.classList.add('visible'));
+    const oc = slide.querySelector('canvas.ink'), cc = c.querySelector('canvas.ink');
+    if (oc && cc) cc.getContext('2d').drawImage(oc, 0, 0);
+    return c;
+  }
+  function updateNotes() {
+    if (!nw || nw.closed) return;
+    const d = nw.document, s = slides[cur];
+    d.getElementById('sp-count').textContent = (cur + 1) + ' / ' + slides.length;
+    d.getElementById('sp-title').textContent = s.dataset.title || '';
+    d.getElementById('sp-cur').replaceChildren(preview(s, false));
+    const left = steps[cur].length - step;
+    d.getElementById('sp-steps').textContent = left > 0 ? 'Quedan ' + left + (left === 1 ? ' clic' : ' clics') + ' en esta slide' : '';
+    const nx = slides[cur + 1];
+    d.getElementById('sp-next').replaceChildren(nx ? preview(nx, true) : d.createTextNode(''));
+    const n = s.querySelector('.notes');
+    d.getElementById('sp-notes').textContent = n ? n.textContent.trim() : '';
+  }
+
+  // Teclado
+  let digits = '', dt = 0;
+  function onKey(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    if (/^[0-9]$/.test(k)) { digits += k; clearTimeout(dt); dt = setTimeout(() => { digits = ''; }, 2000); return; }
+    if (k === 'Enter' && digits) { go(parseInt(digits, 10) - 1, 0); digits = ''; overview(false); e.preventDefault(); return; }
+    if (body.classList.contains('show-help') && (k === 'Escape' || k === '?')) { help(false); e.preventDefault(); return; }
+    if (body.classList.contains('overview')) {
+      if (k === 'ArrowRight' || k === 'ArrowDown') go(cur + 1, 0);
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') go(cur - 1, 0);
+      else if (k === 'Enter' || k === 'Escape' || k === 'o' || k === 'O' || k === ' ') overview(false);
+      else return;
+      e.preventDefault(); return;
+    }
+    switch (k) {
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ': case 'Enter': case 'n': case 'N': next(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': case 'p': case 'P': prev(); break;
+      case 'Home': go(0, 0); break;
+      case 'End': go(slides.length - 1, 0); break;
+      case 'f': case 'F': fullscreen(); break;
+      case 'o': case 'O': overview(); break;
+      case 's': case 'S': openNotes(); break;
+      case 'b': case 'B': case '.': black(); break;
+      case 'd': case 'D': togglePen(); break;
+      case 'z': case 'Z': undo(); break;
+      case 'c': case 'C': clearInk(); break;
+      case 'w': case 'W': nextWidth(); break;
+      case 'Escape': if (penOn) togglePen(false); else return; break;
+      case '?': case 'h': case 'H': help(); break;
+      default: return;
+    }
+    e.preventDefault();
+  }
+  document.addEventListener('keydown', onKey);
+
+  const actions = { prev, next, overview: () => overview(), notes: openNotes, full: fullscreen, help: () => help(), width: nextWidth, undo, clear: clearInk };
+  document.querySelectorAll('.nav button, .tools .tb').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); actions[b.dataset.act](); b.blur(); }));
+  document.getElementById('help').addEventListener('click', () => help(false));
+  let mt = 0;
+  document.addEventListener('mousemove', () => { body.classList.add('mouse'); clearTimeout(mt); mt = setTimeout(() => body.classList.remove('mouse'), 2000); });
+
+  let tx = null;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (tx === null || body.classList.contains('overview') || body.classList.contains('pen')) { tx = null; return; }
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+    tx = null;
+  });
+
+  function fromHash() { const n = parseInt(location.hash.slice(1), 10); if (!isNaN(n) && n - 1 !== cur) go(n - 1, 0); }
+  window.addEventListener('hashchange', fromHash);
+  window.addEventListener('resize', fit);
+  window.addEventListener('beforeunload', () => { if (nw && !nw.closed) nw.close(); });
+
+  fit();
+  const n0 = parseInt(location.hash.slice(1), 10);
+  go(isNaN(n0) ? 0 : n0 - 1, 0);
+})();
+</script>
+</body>
+</html>
