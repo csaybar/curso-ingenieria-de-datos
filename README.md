@@ -8,7 +8,7 @@ En línea: https://csaybar.github.io/curso-ingenieria-de-datos/
 
 | Clase | Fecha | Tema | Material |
 |---|---|---|---|
-| 1 | Miércoles 18 de noviembre de 2026 | La arquitectura de cómputo: disco, RAM y CPU | [slides](clase-01/slides.html) · [PDF](clase-01/slides.pdf) · [laboratorio](clase-01/laboratorio-disco-ram-cpu.ipynb) |
+| 1 | Miércoles 18 de noviembre de 2026 | La arquitectura de cómputo: disco, RAM y CPU | [slides](clase-01/slides.html) · [PDF](clase-01/slides.pdf) · [laboratorio en Colab](https://colab.research.google.com/github/csaybar/curso-ingenieria-de-datos/blob/main/clase-01/laboratorio-disco-ram-cpu.ipynb) |
 | 2 | Viernes 20 de noviembre de 2026 | PCIe, VRAM y la GPU | [slides](clase-02/slides.html) · [PDF](clase-02/slides.pdf) |
 
 ## Ver las slides
@@ -28,9 +28,9 @@ Cada `slides.html` es un solo archivo que funciona sin internet. GitHub muestra 
 
 ## Laboratorio de la clase 1
 
-`clase-01/laboratorio-disco-ram-cpu.ipynb` mide en tu propio computador lo que vimos en clase: muchos archivos chicos contra uno grande, la segunda lectura desde la RAM, la RAM en orden y al azar, y el NDVI en C con y sin instrucciones SIMD.
+[`clase-01/laboratorio-disco-ram-cpu.ipynb`](https://colab.research.google.com/github/csaybar/curso-ingenieria-de-datos/blob/main/clase-01/laboratorio-disco-ram-cpu.ipynb) se abre en Colab y mide lo que vimos en clase: muchos archivos chicos contra uno grande, la segunda lectura desde la RAM, la RAM en orden y al azar, y el NDVI en C con y sin instrucciones SIMD.
 
-Necesita Python con NumPy y Jupyter (o VS Code). Para el último experimento hace falta un compilador de C: `gcc` en Linux, `xcode-select --install` en Mac, WSL en Windows. Mientras corre ocupa unos 1,3 GB de disco; la última celda borra todo.
+En Colab no hay que instalar nada. Para correrlo en tu computador necesitas Python con NumPy y Jupyter (o VS Code); para el último experimento hace falta un compilador de C: `gcc` en Linux, `xcode-select --install` en Mac, WSL en Windows. Mientras corre ocupa unos 1,3 GB de disco; la última celda borra todo.
 
 ## Editar el material
 

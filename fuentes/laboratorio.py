@@ -11,11 +11,13 @@ def md(t): cells.append({"cell_type": "markdown", "metadata": {}, "source": t.st
 def code(t): cells.append({"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": t.strip('\n')})
 
 md('''
-# Laboratorio 1 · Disco, RAM y CPU en tu computador
+# Laboratorio 1 · Disco, RAM y CPU
+
+[![Abrir en Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/csaybar/curso-ingenieria-de-datos/blob/main/clase-01/laboratorio-disco-ram-cpu.ipynb)
 
 Curso taller *Ingeniería de datos para la investigación: procesamiento de imágenes satelitales con deep learning* · Clase 1 · Cesar Aybar
 
-En clase vimos el camino de los datos: disco → RAM → CPU. Aquí lo medimos en tu propio computador con cinco experimentos:
+En clase vimos el camino de los datos: disco → RAM → CPU. Aquí lo medimos en una máquina de verdad, con cinco experimentos:
 
 0. Qué procesador, qué RAM y qué disco tienes.
 1. Un archivo grande contra 40 960 archivos chicos.
@@ -25,7 +27,7 @@ En clase vimos el camino de los datos: disco → RAM → CPU. Aquí lo medimos e
 
 Corre las celdas en orden con Shift + Enter. Los tiempos cambian de un computador a otro, e incluso de una vez a otra; lo que importa es la diferencia entre los dos casos de cada experimento.
 
-Necesitas Python con NumPy. Para el experimento 4, además, un compilador de C (en Linux, `gcc`; en Mac, `xcode-select --install`; en Windows, WSL). Mientras corre ocupa unos 1,3 GB de disco; la última celda borra todo.
+En Colab no hay que instalar nada: ábrelo con el botón de arriba y corre las celdas. También funciona en tu computador con Jupyter o VS Code; ahí necesitas Python con NumPy y, para el experimento 4, un compilador de C (en Linux, `gcc`; en Mac, `xcode-select --install`; en Windows, WSL). Mientras corre ocupa unos 1,3 GB de disco; la última celda borra todo.
 ''')
 code('''
 import os, re, sys, time, shutil, platform, subprocess
