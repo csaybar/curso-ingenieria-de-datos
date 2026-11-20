@@ -891,14 +891,21 @@ body.overview .tc-grid i, .speaker .tc-grid i { background: var(--accent); }
 .slide.active .tc-k { animation: tck 4.8s steps(64, end) .4s both; }
 body.overview .tc-k, .speaker .tc-k { animation: none !important; }
 @media print { .tc-k { animation: none !important; } }
-/* Repaso de velocidades */
-.rc-svg { display: block; width: 1664px; height: 558px; }
-.rc-v { font-size: 30px; font-weight: 700; fill: var(--accent-text); }
-.rc-s { font: 400 22px var(--f-text); fill: var(--muted); }
-@keyframes rcflow { to { stroke-dashoffset: -40; } }
-.slide.active .fragment.visible .rc-flow { animation: rcflow var(--t) linear infinite; }
-body.overview .rc-flow, .speaker .rc-flow { animation: none !important; }
-@media print { .rc-flow { animation: none !important; } }
+/* Repaso: del disco al núcleo */
+.rp-svg { display: block; width: 1664px; height: 460px; }
+.rp-t { font: 700 32px var(--f-text); fill: var(--accent-text); }
+.rp-c { font: 400 22px var(--f-text); fill: var(--muted); }
+@keyframes rpdato {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(286px); }
+  58% { transform: translateX(572px); }
+  67% { transform: translateX(858px); }
+  72% { transform: translateX(1144px); }
+  75%, 100% { transform: translateX(1430px); }
+}
+.slide.active .rp-dato { animation: rpdato 6s ease-in-out infinite; }
+body.overview .rp-dato, .speaker .rp-dato { animation: none !important; }
+@media print { .rp-dato { animation: none !important; transform: translateX(1430px); } }
 
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
@@ -955,25 +962,27 @@ Hoy: PCIe (el puente hacia la GPU), VRAM (la memoria de la GPU) y la GPU.
 </section>
 
 <section class="slide" data-title="Repaso: velocidades">
-  <h2 class="title">Repaso: qué tan rápido es cada tramo</h2>
-  <svg class="rc-svg" viewBox="0 0 1580 530" role="img" aria-label="El camino de los datos con sus velocidades medidas y máximas: del disco a la RAM unos 6,5 GB/s (máximo 7), entre la RAM y la CPU unos 70 GB/s (máximo 90), por PCIe unos 25 GB/s (máximo 32), y entre la VRAM y la GPU unos 900 GB/s (máximo 1000)"><rect x="0" y="0" width="760" height="490" style="fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:10 8"/><rect x="1160" y="0" width="300" height="490" style="fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:10 8"/><text x="16" y="520" style="font:600 22px var(--f-text);fill:var(--muted)">Placa del PC</text><text x="1176" y="520" style="font:600 22px var(--f-text);fill:var(--muted)">Tarjeta de video</text><g class="fragment" data-step="1"><path d="M270 360 H480" style="fill:none;stroke:var(--blue-soft);stroke-width:8"/><path class="rc-flow" d="M270 360 H480" style="fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:10 10;--t:3s"/><text class="svg-lbl rc-v" x="375" y="330" text-anchor="middle">~6,5 GB/s</text><text class="rc-s" x="375" y="400" text-anchor="middle">máx. 7</text><text class="rc-s" x="375" y="426" text-anchor="middle">disco duro: ~0,15</text></g><g class="fragment" data-step="2"><path d="M600 300 V170" style="fill:none;stroke:var(--blue-soft);stroke-width:25"/><path class="rc-flow" d="M600 300 V170" style="fill:none;stroke:var(--accent);stroke-width:8;stroke-dasharray:10 10;--t:0.8s"/><text class="svg-lbl rc-v" x="572" y="222" text-anchor="end">~70 GB/s</text><text class="rc-s" x="572" y="252" text-anchor="end">máx. 90</text><text class="rc-s" x="572" y="278" text-anchor="end">un solo núcleo: ~25</text></g><g class="fragment" data-step="3"><path d="M720 360 H1190" style="fill:none;stroke:var(--blue-soft);stroke-width:15"/><path class="rc-flow" d="M720 360 H1190" style="fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:10 10;--t:1.5s"/><text class="svg-lbl rc-v" x="955" y="330" text-anchor="middle">PCIe 4.0 x16 · ~25 GB/s</text><text class="rc-s" x="955" y="400" text-anchor="middle">máx. 32</text></g><g class="fragment" data-step="4"><path d="M1310 300 V170" style="fill:none;stroke:var(--blue-soft);stroke-width:90"/><path class="rc-flow" d="M1310 300 V170" style="fill:none;stroke:var(--accent);stroke-width:30;stroke-dasharray:10 10;--t:0.25s"/><text class="svg-lbl rc-v" x="1374" y="236">~900 GB/s</text><text class="rc-s" x="1374" y="266" text-anchor="start">máx. 1 000</text></g><rect x="30" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="150" y="356" text-anchor="middle" style="font-size:34px">Disco</text><text x="150" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">NVMe</text><rect x="480" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="600" y="356" text-anchor="middle" style="font-size:34px">RAM</text><text x="600" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">2 × DDR5-5600</text><rect x="480" y="50" width="240" height="120" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="600" y="106" text-anchor="middle" style="font-size:34px">CPU</text><text x="600" y="142" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">cachés L1 · L2 · L3</text><rect x="1190" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1310" y="356" text-anchor="middle" style="font-size:34px">VRAM</text><text x="1310" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">24 GB, GDDR6X</text><rect x="1190" y="50" width="240" height="120" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="1310" y="106" text-anchor="middle" style="font-size:34px">GPU</text><text x="1310" y="142" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">RTX 4090</text></svg>
-  <p class="small" style="margin-top:16px">En grande, lo que se mide en la práctica. «máx.»: lo que dice la ficha técnica.</p>
-  <p class="fragment" data-step="5" style="margin-top:18px">El tramo más angosto después del disco: <b>PCIe, más de 30 veces menos que la VRAM</b>.</p>
+  <h2 class="title">Repaso: del disco al núcleo</h2>
+  <p class="lead">Lo que tarda cada nivel en entregar un dato. Abajo, un dato hace el viaje.</p>
+  <svg class="rp-svg" viewBox="0 0 1664 460" role="img" aria-label="Camino de un dato del disco al núcleo: el disco tarda unos 0,1 milisegundos, la RAM unos 100 nanosegundos, la L3 unos 12, la L2 unos 4, la L1 alrededor de 1 y los registros del núcleo, un ciclo"><rect x="548" y="12" width="1114" height="282" style="fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:10 8"/><text x="566" y="44" style="font:600 22px var(--f-text);fill:var(--muted)">CPU</text><path d="M236 160 H276" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M272 151 L284 160 L272 169 Z" style="fill:var(--slate)"/><path d="M522 160 H562" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M558 151 L570 160 L558 169 Z" style="fill:var(--slate)"/><path d="M808 160 H848" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M844 151 L856 160 L844 169 Z" style="fill:var(--slate)"/><path d="M1094 160 H1134" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M1130 151 L1142 160 L1130 169 Z" style="fill:var(--slate)"/><path d="M1380 160 H1420" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M1416 151 L1428 160 L1416 169 Z" style="fill:var(--slate)"/><rect x="0" y="40" width="230" height="240" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="115" y="164" text-anchor="middle" style="font-size:32px">Disco</text><text x="115" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">NVMe · 2 TB</text><g class="fragment" data-step="1"><text class="rp-t" x="115" y="384" text-anchor="middle">~0,1 ms</text><text class="rp-c" x="115" y="418" text-anchor="middle">~400 000 ciclos</text><text class="rp-c" x="115" y="448" text-anchor="middle">disco duro: ~10 ms</text></g><rect x="286" y="55" width="230" height="210" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="401" y="164" text-anchor="middle" style="font-size:32px">RAM</text><text x="401" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">32 GB</text><g class="fragment" data-step="2"><text class="rp-t" x="401" y="384" text-anchor="middle">~100 ns</text><text class="rp-c" x="401" y="418" text-anchor="middle">~400 ciclos</text></g><rect x="572" y="70" width="230" height="180" style="fill:var(--blue-soft);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="687" y="164" text-anchor="middle" style="font-size:32px">L3</text><text x="687" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">32 MB</text><g class="fragment" data-step="3"><text class="rp-t" x="687" y="384" text-anchor="middle">~12 ns</text><text class="rp-c" x="687" y="418" text-anchor="middle">~50 ciclos</text></g><rect x="858" y="85" width="230" height="150" style="fill:var(--blue-soft);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="973" y="164" text-anchor="middle" style="font-size:32px">L2</text><text x="973" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">1–2 MB</text><g class="fragment" data-step="4"><text class="rp-t" x="973" y="384" text-anchor="middle">~4 ns</text><text class="rp-c" x="973" y="418" text-anchor="middle">~15 ciclos</text></g><rect x="1144" y="100" width="230" height="120" style="fill:var(--blue-soft);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1259" y="164" text-anchor="middle" style="font-size:32px">L1</text><text x="1259" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">48 KB</text><g class="fragment" data-step="5"><text class="rp-t" x="1259" y="384" text-anchor="middle">~1 ns</text><text class="rp-c" x="1259" y="418" text-anchor="middle">~4 ciclos</text></g><rect x="1430" y="110" width="230" height="100" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="1545" y="164" text-anchor="middle" style="font-size:32px">Núcleo</text><text x="1545" y="196" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">registros</text><g class="fragment" data-step="5"><text class="rp-t" x="1545" y="384" text-anchor="middle">al instante</text><text class="rp-c" x="1545" y="418" text-anchor="middle">~1 ciclo</text></g><path d="M115 324 H1545" style="fill:none;stroke:var(--line);stroke-width:3;stroke-dasharray:4 8"/><circle class="rp-dato" cx="115" cy="324" r="14" style="fill:var(--accent);stroke:#FFFFFF;stroke-width:4"/></svg>
+  <p class="fragment" data-step="6" style="margin-top:26px">Cuanto más cerca del núcleo, <b>más chica y más rápida</b> es la memoria.</p>
   <div class="foot"></div>
   <aside class="notes">
-Cinco clics, en el orden en que viajan los datos. El grosor de cada tubo crece con la velocidad medida (con la raíz cuadrada, para que el del disco se alcance a ver) y los puntos naranjas corren más rápido en los tramos más rápidos.
+Seis clics. El punto naranja viaja solo desde que llegamos: se demora mucho en salir del disco y cada vez menos a medida que se acerca al núcleo. Con cada clic aparece lo que tarda cada nivel en entregar un dato, en el orden del viaje.
 
-En grande, lo que se mide de verdad; chico, el máximo teórico de la ficha técnica. En la práctica cada tramo da un 70–90 % de su máximo.
+Clic 1, disco: un NVMe tarda ~0,1 ms en entregar un dato suelto, unos 400 000 ciclos de la CPU. Un disco duro, ~10 ms. (Leyendo seguido, un NVMe entrega ~6–7 GB/s; un disco duro, ~0,15.)
 
-Clic 1, del disco a la RAM: un NVMe PCIe 4.0 promete ~7 GB/s leyendo seguido y entrega ~6,5. Un disco duro, ~0,15. Con muchos archivos chicos, los dos van mucho más lento, porque manda el sistema operativo (clase pasada).
+Clic 2, RAM: ~100 ns, unos 400 ciclos. Es el «muro de la memoria» de la clase pasada. (Con dos módulos DDR5, la RAM entrega hasta ~90 GB/s; con uno solo, la mitad.)
 
-Clic 2, entre la RAM y la CPU: el máximo sale de 2 canales × 8 bytes × 5 600 millones de transferencias por segundo ≈ 90 GB/s. Medido, con todos los núcleos leyendo en orden, ~60–75 GB/s. Un solo núcleo no llega a tanto: ~20–30 GB/s. Y leyendo al azar, mucho menos, porque cada dato paga los ~100 ns de la RAM. (Con DDR4-3200: máximo 51 GB/s, ~40 medido.)
+Clics 3, 4 y 5, las cachés, dentro del chip:
+- L3: 16–128 MB, compartida por todos los núcleos. ~12 ns, ~50 ciclos.
+- L2: 1–2 MB por núcleo. ~4 ns, ~15 ciclos.
+- L1: 32–48 KB por núcleo, pegada a la ALU. ~1 ns, ~4 ciclos.
+- Y los registros, dentro del núcleo: lo que la ALU usa directo, en el mismo ciclo.
 
-Clic 3, de la RAM a la tarjeta de video: PCIe 4.0 x16, 32 GB/s de máximo; con memoria fijada se miden ~25. Es lo primero que vemos hoy.
+Recordar por qué funciona: la caché trae líneas de 64 bytes y el procesador adivina lo que viene (prefetch). Por eso leer en orden es rápido y saltar al azar, lento.
 
-Clic 4, entre la VRAM y la GPU: una RTX 4090 tiene un máximo de ~1 000 GB/s y se miden ~900. Una H100, ~3 350 de máximo.
-
-Clic 5: sacando el disco, PCIe es el cuello de botella: ~900 contra ~25, más de 30 veces menos que la VRAM, y ~3 veces menos que la RAM. Esa es la idea de toda la clase de hoy: cruzar PCIe lo menos posible. Hoy empezamos por ahí.
+Clic 6: cada paso hacia el núcleo es más chico y más rápido. Ciclos redondeados a 4 GHz; los nanosegundos son los mismos de «Si leer de L1 tardara 1 segundo». Hoy seguimos el camino hacia la GPU, empezando por PCIe.
   </aside>
 </section>
 
