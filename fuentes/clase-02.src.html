@@ -942,6 +942,20 @@ body.overview .pa-flow, body.overview .pl-der, body.overview .pl-izq, body.overv
   .pl-time { opacity: 1 !important; }
 }
 
+/* El viaje de un dato */
+.pv-svg { display: block; width: 1664px; height: 400px; margin-top: 10px; }
+.pv-steps { margin-top: 8px; }
+@keyframes pv1 { 0% { transform: translate(0px, 0px); opacity: 1; } 15.0% { transform: translate(0px, -180px); opacity: 1; } 22.2% { transform: translate(-83px, -204px); opacity: 1; } 36.6% { transform: translate(-255px, -204px); opacity: 1; } 63.7% { transform: translate(-580px, -220px); opacity: 1; } 76.2% { transform: translate(-730px, -220px); opacity: 1; } 90.5% { transform: translate(-730px, -220px); opacity: 1; } 100% { transform: translate(-730px, -220px); opacity: 0; } }
+.slide.active .pv-m1.visible ~ .pv-t1 { animation: pv1 4.2s linear infinite; }
+@keyframes pv2 { 0% { transform: translate(0px, 0px); opacity: 1; } 10.2% { transform: translate(150px, 0px); opacity: 1; } 32.3% { transform: translate(475px, 16px); opacity: 1; } 44.0% { transform: translate(647px, 16px); opacity: 1; } 51.1% { transform: translate(750px, 0px); opacity: 1; } 76.2% { transform: translate(1120px, 0px); opacity: 1; } 90.5% { transform: translate(1120px, 0px); opacity: 1; } 100% { transform: translate(1120px, 0px); opacity: 0; } }
+.slide.active .pv-m2.visible ~ .pv-t2 { animation: pv2 4.2s linear infinite; }
+@keyframes pv3 { 0% { transform: translate(0px, 0px); opacity: 1; } 19.8% { transform: translate(280px, 0px); opacity: 1; } 28.3% { transform: translate(400px, 0px); opacity: 1; } 41.0% { transform: translate(400px, -180px); opacity: 1; } 44.6% { transform: translate(445px, -204px); opacity: 1; } 67.7% { transform: translate(120px, -220px); opacity: 1; } 78.3% { transform: translate(-30px, -220px); opacity: 1; } 91.3% { transform: translate(-30px, -220px); opacity: 1; } 100% { transform: translate(-30px, -220px); opacity: 0; } }
+.slide.active .pv-m3.visible ~ .pv-t3 { animation: pv3 4.6s linear infinite; }
+.pv-t { opacity: 0; }
+.slide.active .pv-m2.visible ~ .pv-t1, .slide.active .pv-m3.visible ~ .pv-t1, .slide.active .pv-m3.visible ~ .pv-t2 { animation: none; opacity: 0; }
+body.overview .pv-t, .speaker .pv-t { animation: none !important; opacity: 0; }
+@media print { .pv-t { animation: none !important; opacity: 0; } }
+
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -1070,9 +1084,10 @@ Clic 4: es como USB: el computador y el aparato tienen que hablar el mismo idiom
 </section>
 
 <section class="slide" data-title="Carriles: x1, x4, x16">
-  <h2 class="title">Un carril, y por qué x16 es más rápido que x4</h2>
+  <h2 class="title">Carriles: qué significa x1, x4 y x16</h2>
   <svg class="pl-svg" viewBox="0 0 1664 170" role="img" aria-label="Un carril PCIe: un par de cables que envía de la CPU a la GPU y otro que recibe en sentido contrario, al mismo tiempo"><rect x="0" y="30" width="170" height="130" style="fill:var(--navy)"/><text class="svg-lbl-light" x="85" y="104" text-anchor="middle" style="font-size:32px">CPU</text><rect x="1494" y="30" width="170" height="130" style="fill:var(--navy)"/><text class="svg-lbl-light" x="1579" y="104" text-anchor="middle" style="font-size:32px">GPU</text><path class="pl-der" d="M170 72 H1494" style="fill:none;stroke:var(--accent);stroke-width:6"/><path class="pl-izq" d="M1494 118 H170" style="fill:none;stroke:var(--blue);stroke-width:6"/><text class="svg-lbl" x="832" y="52" text-anchor="middle" style="font-size:24px">un par de cables para enviar →</text><text class="svg-lbl" x="832" y="156" text-anchor="middle" style="font-size:24px;fill:var(--blue)">← otro par para recibir</text></svg>
-  <p class="small" style="margin:6px 0 26px">Un carril de PCIe 4.0 lleva ~2 GB/s en cada sentido, al mismo tiempo.</p>
+  <p class="small" style="margin:6px 0 16px">Un carril de PCIe 4.0 lleva ~2 GB/s en cada sentido, al mismo tiempo.</p>
+  <p style="margin:0 0 24px">Un dispositivo usa varios carriles a la vez. Se escribe con una x: <b>x4 = «por cuatro» = 4 carriles</b>.</p>
   <div class="pl fragment play" data-step="1">
     <p class="pl-h">Copiar 1 GB con 1, 4 y 16 carriles</p>
     <div class="pl-row"><p><b>x1</b> tarjeta de red</p><div class="pl-track" style="--h:8px"><i style="--t:5.0s"></i></div><p class="pl-v">~2 GB/s</p><p class="pl-time" style="--t:5.0s">0,5 s</p></div><div class="pl-row"><p><b>x4</b> SSD NVMe</p><div class="pl-track" style="--h:28px"><i style="--t:1.25s"></i></div><p class="pl-v">~8 GB/s</p><p class="pl-time" style="--t:1.25s">0,13 s</p></div><div class="pl-row"><p><b>x16</b> GPU</p><div class="pl-track" style="--h:112px"><i style="--t:0.31s"></i></div><p class="pl-v">~32 GB/s</p><p class="pl-time" style="--t:0.31s">0,03 s</p></div>
@@ -1086,7 +1101,7 @@ Arriba, un solo carril: son dos pares de cables. Uno envía de la CPU a la GPU (
 
 Clic 1, la carrera: el mismo GB por 1, 4 y 16 carriles. Los carriles trabajan en paralelo, así que la velocidad se suma: x1 ~2 GB/s (medio segundo), x4 ~8 GB/s (~0,13 s), x16 ~32 GB/s (~0,03 s). El grosor de cada pista es proporcional a los carriles. En la animación, el tiempo va 10 veces más lento.
 
-«x16» se lee «por dieciséis»: el número de carriles de esa conexión. Ejemplos típicos: una tarjeta de red usa x1, un SSD NVMe x4, una GPU x16.
+Antes de la carrera, la notación: «x16» se lee «por dieciséis» y es el número de carriles de esa conexión; x4, cuatro; x1, uno. Ejemplos típicos: una tarjeta de red usa x1, un SSD NVMe x4, una GPU x16.
 
 Clic 2: cada carril es físico, un cable que une dos puntos fijos (por ejemplo, la CPU con la ranura de la GPU). No es un pasillo compartido que cualquiera puede usar: los 16 carriles de la GPU son solo de la GPU.
   </aside>
@@ -1140,6 +1155,31 @@ Clic 3, lo que cuelga del chipset: discos por cable SATA (disco duro y SSD SATA)
 Clic 4: cada uno tiene su propia conexión al chipset, pero para llegar a la CPU todos pasan por el mismo enlace de ~8 GB/s, como varios enchufes en una regleta. Si se copia del segundo NVMe a un disco USB mientras se baja algo por la red, todos se reparten ese tubo.
 
 Clic 5: el disco duro y el SSD SATA no usan PCIe: hablan SATA (otro estándar, más viejo) con el chipset. SATA tiene un techo de ~0,55 GB/s; por eso un SSD SATA nunca pasa de ahí, y un disco duro ni siquiera llega (~0,15). El NVMe, en cambio, es PCIe puro: NVMe es el idioma que usa el SSD para hablar por PCIe.
+  </aside>
+</section>
+
+<section class="slide" data-title="El viaje de un dato">
+  <h2 class="title">¿Por dónde viaja un dato del disco a la GPU?</h2>
+  <svg class="pv-svg" viewBox="0 130 1664 400" role="img" aria-label="La RAM se conecta a la CPU por canales DDR, no por PCIe. El SSD NVMe y la GPU se conectan a la CPU por PCIe. El disco duro se conecta por SATA al chipset, y el chipset a la CPU. Un dato del disco pasa por la CPU para llegar a la RAM, y de la RAM pasa otra vez por la CPU para llegar a la GPU"><path d="M420 236 H640 M420 284 H640" style="fill:none;stroke:var(--blue);stroke-width:10"/><text class="svg-lbl" x="530" y="214" text-anchor="middle" style="font-size:22px;fill:var(--blue)">canales DDR</text><text x="530" y="322" text-anchor="middle" style="font:600 20px var(--f-text);fill:var(--blue)">no es PCIe</text><path d="M1020 260 H1240" style="fill:none;stroke:var(--accent);stroke-width:22"/><text class="svg-lbl" x="1130" y="232" text-anchor="middle" style="font-size:22px;fill:var(--accent-text)">PCIe x16</text><path d="M1000 370 V440" style="fill:none;stroke:var(--accent);stroke-width:7"/><text class="svg-lbl" x="1014" y="412" style="font-size:22px;fill:var(--accent-text)">PCIe x4</text><path d="M700 370 V440" style="fill:none;stroke:var(--accent);stroke-width:7"/><text class="svg-lbl" x="686" y="412" text-anchor="end" style="font-size:22px;fill:var(--accent-text)">enlace x4</text><path d="M420 480 H580" style="fill:none;stroke:var(--slate);stroke-width:5"/><text class="svg-lbl" x="500" y="466" text-anchor="middle" style="font-size:22px;fill:var(--muted)">SATA</text><rect x="640" y="150" width="380" height="220" style="fill:var(--navy)"/><text class="svg-lbl-light" x="830" y="190" text-anchor="middle" style="font-size:32px">CPU</text><rect x="660" y="206" width="170" height="140" style="fill:var(--blue)"/><text class="svg-lbl-light" x="745" y="268" text-anchor="middle" style="font-size:20px">controlador</text><text class="svg-lbl-light" x="745" y="294" text-anchor="middle" style="font-size:20px">de memoria</text><rect x="832" y="206" width="170" height="140" style="fill:var(--accent)"/><text class="svg-lbl-light" x="917" y="268" text-anchor="middle" style="font-size:20px">controlador</text><text class="svg-lbl-light" x="917" y="294" text-anchor="middle" style="font-size:20px">PCIe</text><rect x="120" y="180" width="300" height="160" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="270.0" y="258.0" text-anchor="middle" style="font-size:28px">RAM</text><text x="270.0" y="288.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">2 × DDR5</text><rect x="1240" y="180" width="300" height="160" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1390.0" y="258.0" text-anchor="middle" style="font-size:28px">GPU</text><text x="1390.0" y="288.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">tarjeta de video</text><rect x="880" y="440" width="240" height="80" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1000.0" y="478.0" text-anchor="middle" style="font-size:28px">SSD NVMe</text><text x="1000.0" y="508.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)"></text><rect x="580" y="440" width="240" height="80" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="700.0" y="478.0" text-anchor="middle" style="font-size:28px">Chipset</text><text x="700.0" y="508.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)"></text><rect x="180" y="440" width="240" height="80" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="300.0" y="478.0" text-anchor="middle" style="font-size:28px">Disco duro</text><text x="300.0" y="508.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)"></text><g class="fragment pv-m1" data-step="1"></g><g class="fragment pv-m2" data-step="2"></g><g class="fragment pv-m3" data-step="3"></g><circle class="pv-t pv-t1" cx="1000" cy="480" r="15" style="fill:var(--accent-bright);stroke:#FFFFFF;stroke-width:4"/><circle class="pv-t pv-t2" cx="270" cy="260" r="15" style="fill:var(--accent-bright);stroke:#FFFFFF;stroke-width:4"/><circle class="pv-t pv-t3" cx="300" cy="480" r="15" style="fill:var(--accent-bright);stroke:#FFFFFF;stroke-width:4"/></svg>
+  <div class="pa-steps pv-steps">
+    <p class="fragment" data-step="1"><span>1</span><b>Del SSD a la RAM:</b> entra a la CPU por PCIe y sale a la RAM por los canales DDR.</p>
+    <p class="fragment" data-step="2"><span>2</span><b>De la RAM a la GPU:</b> vuelve a pasar por la CPU y sale por PCIe x16.</p>
+    <p class="fragment" data-step="3"><span>3</span><b>Desde un disco duro:</b> SATA hasta el chipset, el enlace hasta la CPU, y a la RAM.</p>
+  </div>
+  <p class="fragment" data-step="4" style="margin-top:18px">La RAM <b>no va por PCIe</b>: tiene su propia conexión con la CPU. <b>Todo pasa por la CPU.</b></p>
+  <div class="foot"></div>
+  <aside class="notes">
+Cuatro clics; en cada uno un dato (el punto naranja) hace un viaje distinto, y se repite.
+
+Lo primero: la CPU tiene dos «puertas» distintas. Una es el controlador de memoria, que habla con la RAM por los canales DDR (los dos tubos azules: dos módulos, dos canales). La otra es el controlador PCIe, que habla con los dispositivos: la GPU, el SSD NVMe y el chipset. La RAM no se conecta por PCIe.
+
+Clic 1, del SSD a la RAM (lo de «¿Quién mueve los datos del disco a la RAM?» de la clase pasada): el controlador del SSD manda los datos por PCIe x4 a la CPU, y la CPU los deja en la RAM por los canales DDR. Lo hace por DMA, sin que los núcleos copien byte por byte.
+
+Clic 2, de la RAM a la GPU: los datos salen de la RAM por los canales DDR, pasan otra vez por la CPU y salen por PCIe x16 hasta la tarjeta de video. Esto es lo que vamos a medir en las próximas slides.
+
+Clic 3, desde un disco duro: el disco habla SATA con el chipset; el chipset los pasa a la CPU por su enlace de 4 carriles, y de ahí a la RAM. Por eso el disco duro no usa PCIe directamente, aunque sus datos sí terminan cruzando el enlace del chipset.
+
+Clic 4: la CPU está en el medio de todo. PCIe conecta la CPU con los dispositivos; la RAM tiene su propia conexión. No hay un camino directo del disco a la GPU: todo pasa por la CPU y, normalmente, por la RAM. (Existe una tecnología para saltarse la RAM, GPUDirect Storage, en servidores; si preguntan.)
   </aside>
 </section>
 
