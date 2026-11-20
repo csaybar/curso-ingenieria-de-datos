@@ -891,6 +891,14 @@ body.overview .tc-grid i, .speaker .tc-grid i { background: var(--accent); }
 .slide.active .tc-k { animation: tck 4.8s steps(64, end) .4s both; }
 body.overview .tc-k, .speaker .tc-k { animation: none !important; }
 @media print { .tc-k { animation: none !important; } }
+/* Repaso de velocidades */
+.rc-svg { display: block; width: 1664px; height: 558px; }
+.rc-v { font-size: 30px; font-weight: 700; fill: var(--accent-text); }
+@keyframes rcflow { to { stroke-dashoffset: -40; } }
+.slide.active .fragment.visible .rc-flow { animation: rcflow var(--t) linear infinite; }
+body.overview .rc-flow, .speaker .rc-flow { animation: none !important; }
+@media print { .rc-flow { animation: none !important; } }
+
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -948,6 +956,26 @@ Repaso en tres frases:
 - CPU: instrucciones básicas al ritmo del reloj; para no esperar 400 ciclos a la RAM usa las cachés.
 
 Hoy: PCIe (el puente hacia la GPU), VRAM (la memoria de la GPU) y la GPU.
+  </aside>
+</section>
+
+<section class="slide" data-title="Repaso: velocidades">
+  <h2 class="title">Repaso: qué tan rápido es cada tramo</h2>
+  <svg class="rc-svg" viewBox="0 0 1580 530" role="img" aria-label="El camino de los datos con sus velocidades: del disco a la RAM unos 7 GB/s, entre la RAM y la CPU unos 90 GB/s, por PCIe hacia la tarjeta de video unos 32 GB/s, y entre la VRAM y la GPU unos 1000 GB/s"><rect x="0" y="0" width="760" height="490" style="fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:10 8"/><rect x="1160" y="0" width="300" height="490" style="fill:none;stroke:var(--line);stroke-width:2;stroke-dasharray:10 8"/><text x="16" y="520" style="font:600 22px var(--f-text);fill:var(--muted)">Placa del PC</text><text x="1176" y="520" style="font:600 22px var(--f-text);fill:var(--muted)">Tarjeta de video</text><g class="fragment" data-step="1"><path d="M270 360 H480" style="fill:none;stroke:var(--blue-soft);stroke-width:8"/><path class="rc-flow" d="M270 360 H480" style="fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:10 10;--t:3s"/><text class="svg-lbl rc-v" x="375" y="330" text-anchor="middle">~7 GB/s</text><text x="375" y="404" text-anchor="middle" style="font:400 20px var(--f-text);fill:var(--muted)">disco duro: 0,15</text></g><g class="fragment" data-step="2"><path d="M600 300 V170" style="fill:none;stroke:var(--blue-soft);stroke-width:28"/><path class="rc-flow" d="M600 300 V170" style="fill:none;stroke:var(--accent);stroke-width:9;stroke-dasharray:10 10;--t:0.7s"/><text class="svg-lbl rc-v" x="632" y="246">~90 GB/s</text></g><g class="fragment" data-step="3"><path d="M720 360 H1190" style="fill:none;stroke:var(--blue-soft);stroke-width:17"/><path class="rc-flow" d="M720 360 H1190" style="fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:10 10;--t:1.4s"/><text class="svg-lbl rc-v" x="955" y="330" text-anchor="middle">PCIe 4.0 x16 · ~32 GB/s</text></g><g class="fragment" data-step="4"><path d="M1310 300 V170" style="fill:none;stroke:var(--blue-soft);stroke-width:95"/><path class="rc-flow" d="M1310 300 V170" style="fill:none;stroke:var(--accent);stroke-width:31;stroke-dasharray:10 10;--t:0.25s"/><text class="svg-lbl rc-v" x="1374" y="246">~1 000 GB/s</text></g><rect x="30" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="150" y="356" text-anchor="middle" style="font-size:34px">Disco</text><text x="150" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">NVMe</text><rect x="480" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="600" y="356" text-anchor="middle" style="font-size:34px">RAM</text><text x="600" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">32 GB, DDR5</text><rect x="480" y="50" width="240" height="120" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="600" y="106" text-anchor="middle" style="font-size:34px">CPU</text><text x="600" y="142" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">cachés L1 · L2 · L3</text><rect x="1190" y="300" width="240" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1310" y="356" text-anchor="middle" style="font-size:34px">VRAM</text><text x="1310" y="392" text-anchor="middle" style="font:400 22px var(--f-text);fill:var(--muted)">24 GB, GDDR6X</text><rect x="1190" y="50" width="240" height="120" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="1310" y="106" text-anchor="middle" style="font-size:34px">GPU</text><text x="1310" y="142" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">RTX 4090</text></svg>
+  <p class="fragment" data-step="5" style="margin-top:22px">El tramo más angosto después del disco: <b>PCIe, unas 30 veces menos que la VRAM</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Cinco clics, en el orden en que viajan los datos. El grosor de cada tubo crece con la velocidad (con la raíz cuadrada, para que el del disco se alcance a ver) y los puntos naranjas corren más rápido en los tramos más rápidos.
+
+Clic 1, del disco a la RAM: un NVMe entrega ~7 GB/s leyendo seguido; un disco duro, ~0,15 GB/s. Recordar lo de la clase pasada: con muchos archivos chicos, los dos van mucho más lento, porque manda el sistema operativo.
+
+Clic 2, entre la RAM y la CPU: ~90 GB/s con dos módulos DDR5. Y dentro de la CPU, las cachés para no esperar los ~100 ns (unos 400 ciclos) que tarda la RAM en entregar un dato suelto.
+
+Clic 3, de la RAM a la tarjeta de video: PCIe 4.0 x16, ~32 GB/s en teoría (unos 25 en la práctica). Es lo primero que vemos hoy.
+
+Clic 4, entre la VRAM y la GPU: ~1 000 GB/s en una RTX 4090; ~3 350 en una H100. El tubo más grueso de todo el camino.
+
+Clic 5: sacando el disco, PCIe es el cuello de botella: ~30 veces menos que la VRAM y ~3 veces menos que la RAM. Esa es la idea de toda la clase de hoy: cruzar PCIe lo menos posible. Hoy empezamos por ahí.
   </aside>
 </section>
 
