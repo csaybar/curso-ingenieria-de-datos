@@ -1302,32 +1302,6 @@ Clic 3: el motor de copia de la GPU (un DMA propio) trae los datos por PCIe hast
 Clic 4: si los datos ya se dejaron en memoria fijada desde el principio, el paso 2 desaparece y la copia es casi el doble de rápida (siguiente slide).
   </aside>
 </section>
-
-<section class="slide" data-title="¿Cuánto tarda en cruzar 1 GB?">
-  <h2 class="title">¿Cuánto tarda en cruzar 1 GB?</h2>
-  <div class="fragment race">
-    <div class="race-row pc-race"><p>PCIe 5.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.2s"></div></div><p class="race-time" style="--t:.2s">~20 ms</p></div>
-    <div class="race-row pc-race"><p>PCIe 4.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.4s"></div></div><p class="race-time" style="--t:.4s">~40 ms</p></div>
-    <div class="race-row pc-race"><p>PCIe 4.0 x16, memoria normal</p><div class="race-track"><div class="race-fill" style="--t:.83s"></div></div><p class="race-time" style="--t:.83s">~85 ms</p></div>
-    <div class="race-row pc-race"><p>PCIe 3.0 x16, memoria fijada</p><div class="race-track"><div class="race-fill" style="--t:.83s"></div></div><p class="race-time" style="--t:.83s">~85 ms</p></div>
-    <div class="race-row pc-race"><p>GPU externa por Thunderbolt</p><div class="race-track"><div class="race-fill hot" style="--t:4s"></div></div><p class="race-time" style="--t:4s">~400 ms</p></div>
-  </div>
-  <p class="fragment" style="margin-top:44px">Comparación: dentro de la GPU, la VRAM de una RTX 4090 lee ese mismo 1 GB en <b>~1 ms</b>.</p>
-  <p class="small" style="margin-top:24px">Clic para empezar. En la animación, 1 segundo equivale a 100 ms reales.</p>
-  <div class="foot"></div>
-  <aside class="notes">
-Un clic arranca la carrera; otro muestra la comparación. Velocidades reales aproximadas, no las teóricas.
-
-- PCIe 5.0 x16 con memoria fijada: ~50 GB/s → ~20 ms.
-- PCIe 4.0 x16 con memoria fijada: ~25 GB/s → ~40 ms.
-- PCIe 4.0 x16 con memoria normal: ~12 GB/s, por la copia extra de la CPU → ~85 ms.
-- PCIe 3.0 x16: ~12 GB/s → ~85 ms.
-- GPU externa por Thunderbolt (4 carriles PCIe 3.0): ~2,5 GB/s → ~400 ms.
-
-Último clic: dentro de la GPU, la VRAM de una RTX 4090 (~1 000 GB/s) lee 1 GB en ~1 ms. Cruzar el puente cuesta entre 20 y 400 veces más que leer del otro lado.
-  </aside>
-</section>
-
 <section class="slide" data-title="¿Mi GPU va por x16?">
   <h2 class="title">¿Mi GPU va de verdad por x16?</h2>
 <pre class="term-out" style="margin-top:0">$ nvidia-smi --query-gpu=name,pcie.link.gen.current,pcie.link.width.current --format=csv
