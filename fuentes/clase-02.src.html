@@ -1447,47 +1447,6 @@ Analogía: la RAM es una carretera de 2 carriles muy bien asfaltada; la HBM, una
   </aside>
 </section>
 
-<!-- ===================== RESUMEN ===================== -->
-
-<section class="slide" data-title="Todo el camino en un gráfico">
-  <h2 class="title">Todo el camino en un gráfico</h2>
-  <svg class="sum-svg" viewBox="0 0 1664 690" role="img" aria-label="Gráfico de capacidad contra tiempo de acceso: L1, L2, L3, RAM, VRAM, SSD, disco duro y nube; a mayor capacidad, mayor tiempo">
-    <g style="stroke:var(--line);stroke-width:1.5">
-      <path d="M200 30 V550 M447 30 V550 M694 30 V550 M942 30 V550 M1189 30 V550 M1436 30 V550"/>
-      <path d="M200 30 H1580 M200 95 H1580 M200 160 H1580 M200 225 H1580 M200 290 H1580 M200 355 H1580 M200 420 H1580 M200 485 H1580 M200 550 H1580"/>
-    </g>
-    <g class="svg-lbl" style="font-size:24px;font-weight:500;fill:var(--muted)">
-      <text x="180" y="38" text-anchor="end">1 ns</text><text x="180" y="168" text-anchor="end">100 ns</text><text x="180" y="298" text-anchor="end">10 µs</text><text x="180" y="428" text-anchor="end">1 ms</text><text x="180" y="558" text-anchor="end">100 ms</text>
-      <text x="200" y="590" text-anchor="middle">10 KB</text><text x="447" y="590" text-anchor="middle">1 MB</text><text x="694" y="590" text-anchor="middle">100 MB</text><text x="942" y="590" text-anchor="middle">10 GB</text><text x="1189" y="590" text-anchor="middle">1 TB</text><text x="1436" y="590" text-anchor="middle">100 TB</text>
-    </g>
-    <text class="svg-lbl" x="890" y="640" text-anchor="middle">Capacidad →</text>
-    <defs><marker id="ah-acc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker></defs>
-    <text class="svg-lbl" x="1580" y="18" text-anchor="end">↓ Tiempo para encontrar un dato</text>
-    <g class="fragment" data-step="1"><circle cx="284" cy="30" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="304" y="40">L1</text></g>
-    <g class="fragment" data-step="2"><circle cx="484" cy="69" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="504" y="78">L2</text></g>
-    <g class="fragment" data-step="3"><circle cx="634" cy="100" r="13" style="fill:var(--accent)"/><text class="svg-lbl" x="654" y="109">L3</text></g>
-    <g class="fragment" data-step="4"><circle cx="1005" cy="160" r="13" style="fill:var(--blue)"/><text class="svg-lbl" x="985" y="150" text-anchor="end">RAM</text></g>
-    <g class="fragment" data-step="5"><circle cx="989" cy="199" r="13" style="fill:var(--navy)"/><text class="svg-lbl" x="1010" y="225">VRAM</text></g>
-    <g class="fragment" data-step="6"><circle cx="1226" cy="355" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1246" y="364">SSD</text></g>
-    <g class="fragment" data-step="7"><circle cx="1350" cy="485" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1370" y="494">Disco duro</text></g>
-    <g class="fragment" data-step="8"><circle cx="1560" cy="550" r="13" style="fill:var(--slate)"/><text class="svg-lbl" x="1540" y="530" text-anchor="end">Nube</text></g>
-    <g class="fragment" data-step="9">
-      <path d="M330 180 L1150 540" style="fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:14 10" marker-end="url(#ah-acc)"/>
-      <text class="svg-lbl" x="215" y="470" style="fill:var(--accent-text)">Más grande, más lejos, más lento</text>
-    </g>
-  </svg>
-  <div class="foot"></div>
-  <aside class="notes">
-Nueve clics: aparece cada memoria y al final la tendencia. Los dos ejes son logarítmicos: cada línea es 10 o 100 veces más.
-
-L1, L2, L3, RAM, VRAM, SSD, disco duro, nube. Cuanto más grande, más lejos del núcleo y más tarda en entregar un dato. Es la misma regla en toda la cadena: por eso existen tantos niveles, y por eso los datos que más se usan se copian cerca.
-
-La única que se sale un poco de la línea es la VRAM: tarda más que la RAM en entregar un dato suelto, pero entrega muchísimos más por segundo (el bus ancho de la slide anterior). Esa diferencia, latencia frente a ancho de banda, es la diferencia de fondo entre la CPU y la GPU.
-
-Valores aproximados: L1 48 KB y ~1 ns; L2 2 MB y ~4 ns; L3 32 MB y ~12 ns; RAM 32 GB y ~100 ns; VRAM 24 GB y ~400 ns; SSD 2 TB y ~0,1 ms; disco duro 20 TB y ~10 ms; nube (sin límite práctico) y ~100 ms.
-  </aside>
-</section>
-
 <!-- ===================== LA GPU ===================== -->
 
 <section class="slide orange" data-title="Destino · La GPU">
