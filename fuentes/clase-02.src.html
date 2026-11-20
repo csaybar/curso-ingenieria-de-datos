@@ -956,6 +956,18 @@ body.overview .pa-flow, body.overview .pl-der, body.overview .pl-izq, body.overv
 body.overview .pv-t, .speaker .pv-t { animation: none !important; opacity: 0; }
 @media print { .pv-t { animation: none !important; opacity: 0; } }
 
+/* ¿Qué es el chipset? */
+.cs { display: grid; grid-template-columns: 820px 1fr; gap: 64px; align-items: center; }
+.cs-svg { display: block; width: 820px; height: 560px; }
+.cs-list { margin: 0; padding-left: 40px; font-size: 30px; line-height: 1.35; }
+.cs-list li { margin-bottom: 22px; }
+.cs-list li::marker { font-weight: 700; color: var(--accent-text); }
+.cs-out, .cs-link { stroke-dasharray: 12 8; }
+.slide.active .cs-out { animation: flow 1.4s linear infinite; }
+.slide.active .cs-link { animation: flow .8s linear infinite; }
+body.overview .cs-out, body.overview .cs-link, .speaker .cs-out, .speaker .cs-link { animation: none !important; }
+@media print { .cs-out, .cs-link { animation: none !important; } }
+
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -1093,6 +1105,7 @@ Clic 4: es como USB: el computador y el aparato tienen que hablar el mismo idiom
     <div class="pl-row"><p><b>x1</b> tarjeta de red</p><div class="pl-track" style="--h:8px"><i style="--t:5.0s"></i></div><p class="pl-v">~2 GB/s</p><p class="pl-time" style="--t:5.0s">0,5 s</p></div><div class="pl-row"><p><b>x4</b> SSD NVMe</p><div class="pl-track" style="--h:28px"><i style="--t:1.25s"></i></div><p class="pl-v">~8 GB/s</p><p class="pl-time" style="--t:1.25s">0,13 s</p></div><div class="pl-row"><p><b>x16</b> GPU</p><div class="pl-track" style="--h:112px"><i style="--t:0.31s"></i></div><p class="pl-v">~32 GB/s</p><p class="pl-time" style="--t:0.31s">0,03 s</p></div>
   </div>
   <p class="fragment" data-step="2" style="margin-top:18px">Cada carril es un cable propio entre dos puntos fijos: <b>16 carriles, 16 veces la velocidad de uno</b>.</p>
+  <p class="fragment" data-step="3" style="margin-top:8px">Manda el más chico: una GPU x16 en una ranura con solo 4 carriles <b>funciona a x4</b>.</p>
   <div class="foot"></div>
   <aside class="notes">
 Dos clics.
@@ -1104,38 +1117,38 @@ Clic 1, la carrera: el mismo GB por 1, 4 y 16 carriles. Los carriles trabajan en
 Antes de la carrera, la notación: «x16» se lee «por dieciséis» y es el número de carriles de esa conexión; x4, cuatro; x1, uno. Ejemplos típicos: una tarjeta de red usa x1, un SSD NVMe x4, una GPU x16.
 
 Clic 2: cada carril es físico, un cable que une dos puntos fijos (por ejemplo, la CPU con la ranura de la GPU). No es un pasillo compartido que cualquiera puede usar: los 16 carriles de la GPU son solo de la GPU.
+
+Clic 3: la conexión usa el número más chico de tres: los carriles que tiene la CPU (un Ryzen 9 7950X tiene 28), los que la placa lleva a esa ranura y los que sabe usar el dispositivo. Muchas placas tienen una segunda ranura igual de larga que la de la GPU, pero con solo 4 carriles conectados (el manual dice «x16 (x4 mode)»). Una GPU ahí funciona a x4: un cuarto de la velocidad. Se ve con nvidia-smi, unas slides más adelante.
   </aside>
 </section>
 
-<section class="slide" data-title="¿x16 o x4?">
-  <h2 class="title">¿x16 o x4? Manda el más chico de los tres</h2>
-  <div class="pm">
-    <div class="pm-list">
-      <p><b>CPU</b>cuántos carriles tiene en total. Un Ryzen 9 7950X: 28.</p>
-      <p><b>Placa madre</b>cuántos lleva a cada ranura.</p>
-      <p><b>Dispositivo</b>cuántos sabe usar: GPU 16, SSD NVMe 4, tarjeta de red 1.</p>
-    </div>
-    <svg class="pm-svg" viewBox="0 0 1300 470" role="img" aria-label="La CPU lleva 16 carriles a la ranura 1 y solo 4 a la ranura 2, aunque las dos ranuras se ven iguales"><rect x="0" y="40" width="190" height="420" style="fill:var(--navy)"/><text class="svg-lbl-light" x="95" y="262" text-anchor="middle" style="font-size:34px">CPU</text><rect x="600" y="70" width="380" height="44" style="fill:var(--navy)"/><text class="svg-lbl" x="790" y="56" text-anchor="middle" style="font-size:24px">ranura 1</text><rect x="600" y="370" width="380" height="44" style="fill:var(--navy)"/><text class="svg-lbl" x="790" y="356" text-anchor="middle" style="font-size:24px">ranura 2 (igual de larga)</text><g class="fragment" data-step="1"><path d="M190 80 C400 80, 400 74.0, 600 74.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 89 C400 89, 400 76.2, 600 76.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 98 C400 98, 400 78.4, 600 78.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 107 C400 107, 400 80.6, 600 80.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 116 C400 116, 400 82.8, 600 82.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 125 C400 125, 400 85.0, 600 85.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 134 C400 134, 400 87.2, 600 87.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 143 C400 143, 400 89.4, 600 89.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 152 C400 152, 400 91.6, 600 91.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 161 C400 161, 400 93.8, 600 93.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 170 C400 170, 400 96.0, 600 96.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 179 C400 179, 400 98.2, 600 98.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 188 C400 188, 400 100.4, 600 100.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 197 C400 197, 400 102.6, 600 102.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 206 C400 206, 400 104.8, 600 104.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 215 C400 215, 400 107.0, 600 107.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><text class="svg-lbl pm-v" x="1000" y="102">16 carriles · x16</text></g><g class="fragment" data-step="2"><path d="M190 380 C400 380, 400 378, 600 378" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 392 C400 392, 400 387, 600 387" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 404 C400 404, 400 396, 600 396" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 416 C400 416, 400 405, 600 405" style="fill:none;stroke:var(--accent);stroke-width:3"/><text class="svg-lbl pm-v" x="1000" y="402">solo 4 carriles · x4</text><text x="600" y="448" style="font:400 22px var(--f-text);fill:var(--muted)">el manual dice «x16 (x4 mode)»</text></g></svg>
+<section class="slide" data-title="¿Qué es el chipset?">
+  <h2 class="title">¿Qué es el chipset?</h2>
+  <div class="cs">
+    <svg class="cs-svg" viewBox="0 0 820 560" role="img" aria-label="Placa madre vista desde arriba: la CPU, la RAM y la ranura de la GPU; abajo a la derecha el chipset, unido a la CPU por un solo enlace, del que salen conexiones a los puertos SATA, USB, una ranura x1 y un segundo M.2"><rect x="0" y="0" width="820" height="560" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/><text x="16" y="548" style="font:600 20px var(--f-text);fill:var(--muted)">placa madre (vista desde arriba)</text><rect x="12" y="40" width="58" height="220" style="fill:var(--slate)"/><text class="svg-lbl-light" x="41" y="156" text-anchor="middle" style="font-size:20px">USB</text><rect x="150" y="50" width="210" height="210" style="fill:var(--navy)"/><text class="svg-lbl-light" x="255" y="164" text-anchor="middle" style="font-size:34px">CPU</text><text class="svg-lbl" x="462" y="34" text-anchor="middle" style="font-size:20px">RAM</text><rect x="410" y="44" width="14" height="230" style="fill:var(--blue)"/><rect x="440" y="44" width="14" height="230" style="fill:var(--blue)"/><rect x="470" y="44" width="14" height="230" style="fill:var(--blue)"/><rect x="500" y="44" width="14" height="230" style="fill:var(--blue)"/><rect x="110" y="312" width="520" height="22" style="fill:var(--navy)"/><text x="114" y="302" style="font:600 20px var(--f-text);fill:var(--ink)">ranura x16 (GPU)</text><rect x="150" y="362" width="210" height="18" style="fill:var(--blue)"/><text x="368" y="377" style="font:600 18px var(--f-text);fill:var(--ink)">M.2</text><path class="cs-out" d="M600 470 H300 V493" style="fill:none;stroke:var(--accent);stroke-width:4"/><path class="cs-out" d="M600 450 H330 V430" style="fill:none;stroke:var(--accent);stroke-width:4"/><path class="cs-out" d="M720 440 H770" style="fill:none;stroke:var(--accent);stroke-width:4"/><path class="cs-out" d="M720 500 H770" style="fill:none;stroke:var(--accent);stroke-width:4"/><path class="cs-out" d="M600 420 H90 V230 H70" style="fill:none;stroke:var(--accent);stroke-width:4"/><rect x="110" y="486" width="190" height="16" style="fill:var(--navy)"/><text x="114" y="524" style="font:600 18px var(--f-text);fill:var(--ink)">ranura x1</text><rect x="180" y="420" width="150" height="16" style="fill:var(--blue)"/><text x="186" y="412" style="font:600 18px var(--f-text);fill:var(--ink)">M.2 (segundo)</text><rect x="770" y="404" width="40" height="22" style="fill:var(--slate)"/><rect x="770" y="434" width="40" height="22" style="fill:var(--slate)"/><rect x="770" y="464" width="40" height="22" style="fill:var(--slate)"/><rect x="770" y="494" width="40" height="22" style="fill:var(--slate)"/><text x="806" y="392" text-anchor="end" style="font:600 18px var(--f-text);fill:var(--ink)">SATA</text><path class="cs-link" d="M660 400 V290 C660 270, 360 280, 330 262" style="fill:none;stroke:var(--accent);stroke-width:12"/><rect x="600" y="400" width="120" height="120" style="fill:var(--accent)"/><text class="svg-lbl-light" x="660" y="468" text-anchor="middle" style="font-size:22px">Chipset</text><rect class="fragment" data-step="1" x="590" y="390" width="140" height="140" style="fill:none;stroke:var(--navy);stroke-width:6"/><g class="fragment" data-step="3"><text class="svg-lbl" x="644" y="362" text-anchor="end" style="font-size:20px;fill:var(--accent-text)">una sola entrada:</text><text class="svg-lbl" x="644" y="386" text-anchor="end" style="font-size:20px;fill:var(--accent-text)">4 carriles a la CPU</text></g></svg>
+    <ol class="cs-list">
+      <li class="fragment" data-step="1">Es <b>un chip de la placa madre</b>, no de la CPU.</li>
+      <li class="fragment" data-step="2">La CPU tiene pocos carriles. El chipset toma 4 y los <b>reparte en muchas conexiones</b>: SATA, USB, red, wifi, más ranuras.</li>
+      <li class="fragment" data-step="3">Como una regleta: <b>una sola entrada</b> hacia la CPU para todo lo que cuelga de él.</li>
+      <li class="fragment" data-step="4">El nombre de la placa es el de su chipset: <b>B650 o X670</b> (AMD), <b>B760 o Z790</b> (Intel).</li>
+    </ol>
   </div>
-  <p class="fragment" data-step="3" style="margin-top:24px">Una GPU x16 en la ranura 2 funciona a <b>x4: un cuarto de la velocidad</b>. Se ve con <span class="ve-code">nvidia-smi</span>.</p>
   <div class="foot"></div>
   <aside class="notes">
-Tres clics. A la izquierda, los tres límites; a la derecha, un ejemplo real.
+Cuatro clics. El dibujo es una placa madre vista desde arriba, simplificada.
 
-La conexión usa el número más chico de los tres:
-- La CPU tiene una cantidad fija de carriles (un Ryzen 9 7950X tiene 28; un Core i9 de escritorio, 20; un servidor, más de 100) y los reparte en grupos.
-- La placa madre decide cuántos lleva a cada ranura. Eso no se cambia: son pistas de cobre.
-- El dispositivo usa los que sabe usar.
+Clic 1: el chipset es un chip aparte, soldado en la placa (normalmente abajo a la derecha, debajo de un disipador). No está dentro de la CPU.
 
-Clic 1: la ranura 1, la larga de arriba, recibe 16 carriles de la CPU. Ahí va la GPU.
+Clic 2: la CPU tiene pocos carriles y los guarda para lo importante: la GPU (x16) y el SSD NVMe principal (x4). Todo lo demás necesita conexiones: los puertos SATA, los USB, la red, el wifi, el audio, ranuras chicas, un segundo M.2. El chipset toma unos pocos carriles de la CPU y los convierte en muchas conexiones (las líneas naranjas).
 
-Clic 2: muchas placas tienen una segunda ranura igual de larga, pero por dentro solo tiene 4 carriles conectados. En el manual aparece como «x16 (x4 mode)» o «x16 física, x4 eléctrica».
+Clic 3: es como una regleta o un switch de red: muchos enchufes, una sola entrada. Todo lo que cuelga del chipset comparte ese enlace con la CPU: ~8 GB/s en AMD (4 carriles PCIe 4.0); en Intel se llama DMI y en las placas recientes son 8 carriles (~16 GB/s). Intel le dice PCH (platform controller hub) al chipset.
 
-Clic 3: si la GPU (que sabe usar 16) va en la ranura 2, la conexión queda en x4: un cuarto de la velocidad. Funciona, pero copiar datos a la GPU tarda cuatro veces más. Se comprueba con el nvidia-smi de unas slides más adelante.
+Clic 4: cuando una placa se llama «B650», «X670», «B760» o «Z790», ese es el nombre del chipset. Uno más caro trae más puertos y más carriles hacia abajo, pero el enlace con la CPU sigue siendo uno.
 
-Si preguntan: en algunas placas, usar ciertas ranuras M.2 le quita carriles a la ranura de la GPU (de x16 a x8). Está en el manual.
+Siguiente slide: el mapa completo de qué va directo a la CPU y qué pasa por el chipset.
   </aside>
 </section>
+
 
 <section class="slide" data-title="Mapa: CPU y chipset">
   <h2 class="title">Qué va directo a la CPU y qué pasa por el chipset</h2>
