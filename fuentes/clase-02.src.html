@@ -968,6 +968,16 @@ body.overview .pv-t, .speaker .pv-t { animation: none !important; opacity: 0; }
 body.overview .cs-out, body.overview .cs-link, .speaker .cs-out, .speaker .cs-link { animation: none !important; }
 @media print { .cs-out, .cs-link { animation: none !important; } }
 
+/* La memoria dentro de la GPU */
+.gd-row { display: grid; grid-template-columns: 500px 1fr 310px; gap: 28px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.gd-row p { margin: 0 !important; font-size: 24px; color: var(--muted); }
+.gd-row p b { display: block; font: 600 30px/1.2 var(--f-head); color: var(--ink); margin-bottom: 2px; }
+.gd-head p { font: 600 22px/1 var(--f-text); color: var(--muted); text-transform: none; }
+.gd-bar { display: flex; align-items: center; gap: 16px; }
+.gd-bar i { display: block; flex: none; height: 30px; width: var(--w); background: var(--blue); }
+.gd-bar span { font: 700 24px/1.2 var(--f-mono); color: var(--ink); white-space: nowrap; }
+.gd-v { font: 700 28px/1.2 var(--f-text) !important; color: var(--accent-text) !important; }
+
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -1447,6 +1457,53 @@ Analogía: la RAM es una carretera de 2 carriles muy bien asfaltada; la HBM, una
   </aside>
 </section>
 
+<section class="slide" data-title="Las memorias de la GPU">
+  <h2 class="title">La VRAM no es la única memoria de la GPU</h2>
+  <div class="mover rings">
+    <svg viewBox="0 0 900 620" role="img" aria-label="La VRAM está afuera del chip de la GPU. Adentro, la caché L2; dentro de cada SM, la L1 o memoria compartida; y junto a los núcleos, los registros">
+      <g class="fragment" data-step="1">
+        <path d="M600 310 H680" style="fill:none;stroke:var(--ink);stroke-width:4;stroke-dasharray:10 8"/>
+        <rect x="680" y="220" width="210" height="180" style="fill:var(--slate)"/>
+        <text class="svg-lbl-light" x="785" y="318" text-anchor="middle">VRAM</text>
+      </g>
+      <g class="fragment" data-step="2">
+        <rect x="60" y="40" width="540" height="540" style="fill:var(--blue-soft);stroke:var(--blue);stroke-width:3"/>
+        <text class="svg-lbl" x="330" y="82" text-anchor="middle">L2 (todo el chip)</text>
+      </g>
+      <g class="fragment" data-step="3">
+        <rect x="150" y="130" width="360" height="360" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:3"/>
+        <text class="svg-lbl" x="330" y="170" text-anchor="middle">L1 / compartida</text>
+      </g>
+      <g class="fragment" data-step="4">
+        <rect x="215" y="195" width="230" height="230" style="fill:var(--accent)"/>
+        <text class="svg-lbl-light" x="330" y="228" text-anchor="middle">registros</text>
+      </g>
+      <rect x="255" y="255" width="150" height="130" style="fill:var(--navy)"/>
+      <text class="svg-lbl-light" x="330" y="328" text-anchor="middle" style="font-size:24px">núcleos</text>
+    </svg>
+    <div class="mover-txt">
+      <p class="step-p fragment" data-step="1"><span class="n">1</span><span><b>VRAM</b>: afuera del chip, en la tarjeta. La que acabamos de ver.</span></p>
+      <p class="step-p fragment" data-step="2"><span class="n">2</span><span><b>L2</b>: dentro del chip, compartida por todo.</span></p>
+      <p class="step-p fragment" data-step="3"><span class="n">3</span><span><b>L1 / memoria compartida</b>: una en cada grupo de núcleos.</span></p>
+      <p class="step-p fragment" data-step="4"><span class="n">4</span><span><b>Registros</b>: pegados a los núcleos.</span></p>
+      <p class="step-p fragment" data-step="5"><span class="n">5</span><span>Como en la CPU: <b>más cerca de los núcleos, más chica y más rápida</b>. Lo vemos en detalle en la GPU.</span></p>
+    </div>
+  </div>
+  <div class="foot"></div>
+  <aside class="notes">
+Cinco clics, de afuera hacia adentro: el mismo camino que hace un dato.
+
+Es una antesala. La idea es que no se queden con que la GPU solo tiene la VRAM: igual que la CPU tiene sus cachés L1, L2 y L3, la GPU tiene sus propias memorias más chicas y más rápidas dentro del chip.
+
+1. VRAM: la memoria de la tarjeta, afuera del chip. Es la más grande (24 GB en una RTX 4090) y la más lenta de las cuatro.
+2. L2: dentro del chip, compartida por todos los grupos de núcleos (72 MB en una RTX 4090).
+3. L1 o memoria compartida: una por cada grupo de núcleos (los SM, que vemos en la parte de la GPU).
+4. Registros: al lado de los núcleos, la más rápida.
+
+Clic 5: la misma regla de la CPU. Los números y por qué la GPU tiene tantos registros, en la parte de la GPU.
+  </aside>
+</section>
+
 <!-- ===================== LA GPU ===================== -->
 
 <section class="slide orange" data-title="Destino · La GPU">
@@ -1553,25 +1610,32 @@ Clic 1: cambiar de warp es gratis porque cada warp tiene sus propios registros g
 Clic 2: es la diferencia de fondo entre las dos. La CPU apuesta a no esperar: cachés grandes y control sofisticado. La GPU apuesta a tener siempre otro trabajo listo. Por eso una GPU con pocos hilos (una imagen chiquita, o un for que la llama de a poquito) rinde muy poco.
   </aside>
 </section>
-<section class="slide" data-title="La memoria rápida del chip">
-  <h2 class="title">La GPU gasta su memoria rápida en registros</h2>
-  <p class="lead">Memoria dentro del chip, sumando todos los núcleos o todos los SM.</p>
-  <p class="gm-h">CPU · Ryzen 9 9950X</p>
-  <div class="gm-row"><p>Registros</p><div class="gm-bar"><i style="--w:6px;--d:0.00s"></i><span>menos de 1 MB</span></div></div><div class="gm-row"><p>L1</p><div class="gm-bar"><i style="--w:18px;--d:0.25s"></i><span>1,3 MB</span></div></div><div class="gm-row"><p>L2</p><div class="gm-bar"><i style="--w:222px;--d:0.50s"></i><span>16 MB</span></div></div><div class="gm-row"><p>L3</p><div class="gm-bar"><i style="--w:890px;--d:0.75s"></i><span>64 MB</span></div></div>
-  <p class="gm-h" style="margin:30px 0 10px !important">GPU · RTX 4090</p>
-  <div class="gm-row"><p>Registros</p><div class="gm-bar"><i style="--w:445px;--d:0.00s"></i><span>32 MB</span></div></div><div class="gm-row"><p>L1 / compartida</p><div class="gm-bar"><i style="--w:222px;--d:0.25s"></i><span>16 MB</span></div></div><div class="gm-row"><p>L2</p><div class="gm-bar"><i style="--w:1001px;--d:0.50s"></i><span>72 MB</span></div></div>
-  <p class="fragment" data-step="1" style="margin-top:26px">En la GPU los registros ocupan <b>más que toda la L1</b>: así cada warp tiene los suyos listos y cambiar de uno a otro no cuesta nada.</p>
+<section class="slide" data-title="La memoria dentro de la GPU">
+  <h2 class="title">La memoria dentro de la GPU</h2>
+  <p class="lead">De lo más cerca de los núcleos a lo más lejos, en una RTX 4090.</p>
+  <div class="gd">
+    <div class="gd-row gd-head"><p>Nivel</p><p>Tamaño</p><p>Qué tan rápida</p></div>
+    <div class="gd-row fragment" data-step="1"><p><b>Registros</b>junto a los núcleos, en cada SM</p><div class="gd-bar"><i style="--w:263px"></i><span>256 KB/SM · 32 MB</span></div><p class="gd-v">al instante</p></div>
+    <div class="gd-row fragment" data-step="2"><p><b>L1 / memoria compartida</b>en cada SM</p><div class="gd-bar"><i style="--w:231px"></i><span>128 KB/SM · 16 MB</span></div><p class="gd-v">decenas de ciclos</p></div>
+    <div class="gd-row fragment" data-step="3"><p><b>L2</b>en el chip, la comparten todos los SM</p><div class="gd-bar"><i style="--w:300px"></i><span>72 MB</span></div><p class="gd-v">cientos de ciclos</p></div>
+    <div class="gd-row fragment" data-step="4"><p><b>VRAM</b>afuera del chip, en la tarjeta</p><div class="gd-bar"><i style="--w:566px"></i><span>24 GB</span></div><p class="gd-v">~400 ns, la más lenta</p></div>
+  </div>
+  <p class="fragment" data-step="5" style="margin-top:24px">Los registros (32 MB) ocupan <b>más que toda la L1</b>: por eso cambiar de warp no cuesta nada.</p>
+  <p class="fragment" data-step="6" style="margin-top:8px">La memoria compartida <b>la usa el programa a propósito</b>, por ejemplo para un bloque de la imagen.</p>
   <div class="foot"></div>
   <aside class="notes">
-Un clic. Las barras crecen solas y están a la misma escala.
+Seis clics: un nivel por clic, de adentro hacia afuera, y dos ideas al final. Las barras de tamaño van en escala logarítmica (si no, la VRAM no cabría).
 
-La CPU pone casi toda su memoria rápida en cachés (L2 y sobre todo L3) y muy poca en registros: cada núcleo tiene unas pocas decenas de registros visibles para el programa (y unos cientos internos), en total menos de 1 MB en todo el chip.
+1. Registros: cada SM tiene 256 KB (64 KB en cada cuarto), 32 MB en todo el chip. Se leen en el mismo ciclo.
+2. L1 / memoria compartida: 128 KB por SM. Es una sola memoria que se reparte entre caché automática (L1) y memoria compartida, que el programa usa a propósito para que los hilos de un mismo bloque intercambien datos. Responde en decenas de ciclos.
+3. L2: 72 MB para todo el chip, compartida por los 128 SM. Cientos de ciclos.
+4. VRAM: 24 GB afuera del chip. ~400 ns, la más lenta (y la más grande).
 
-La GPU hace lo contrario: 128 SM × 256 KB = 32 MB de registros, el doble que toda su L1 (128 SM × 128 KB = 16 MB). Es lo que permite tener decenas de warps vivos en cada SM, cada uno con sus registros, y saltar de uno a otro sin copiar nada.
+Clic 5, la diferencia con la CPU: la CPU pone casi toda su memoria rápida en cachés y muy poca en registros (menos de 1 MB en todo un Ryzen de 16 núcleos). La GPU hace lo contrario: 32 MB de registros, el doble que toda su L1. Es lo que le permite tener decenas de warps vivos en cada SM, cada uno con sus registros, y saltar de uno a otro sin esperar (la slide anterior).
 
-Valores: Ryzen 9 9950X: L1 de 48 KB de datos + 32 KB de instrucciones por núcleo, 1 MB de L2 por núcleo, 64 MB de L3. RTX 4090: 256 KB de registros y 128 KB de L1 por SM, 72 MB de L2. Los registros de la CPU son una estimación (los fabricantes no los publican con detalle).
+Clic 6: la caché de la CPU es automática; en la GPU, además de la L1 automática, el programa puede usar la memoria compartida a propósito. Ejemplo típico: un filtro sobre una imagen, donde cada hilo necesita los píxeles vecinos; se carga un bloque de la imagen en la memoria compartida una vez y todos los hilos lo leen de ahí, en vez de ir a la VRAM cada uno.
 
-Fuera del chip quedan la RAM (CPU) y la VRAM (GPU), que ya vimos.
+Valores: tamaños oficiales de NVIDIA para la RTX 4090. NVIDIA no publica latencias; los «decenas» y «cientos de ciclos» vienen de mediciones independientes y cambian con cada generación.
   </aside>
 </section>
 <section class="slide" data-title="¿Siempre conviene la GPU?">
