@@ -904,6 +904,44 @@ body.overview .tc-k, .speaker .tc-k { animation: none !important; }
 .rp-m6.visible ~ .rp-dato { transform: translateX(1430px); transition-duration: 0.3s; }
 body.overview .rp-dato, .speaker .rp-dato { transition: none; }
 
+/* ===== PCIe desde cero ===== */
+.pa-svg { display: block; width: 1664px; height: 490px; }
+.pa-flow { stroke-dasharray: 12 8; }
+.slide.active .pa-flow { animation: flow 1s linear infinite; }
+.pa-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 18px; }
+.pa-steps p { font-size: 26px; line-height: 1.3; margin: 0 !important; }
+.pa-steps span { display: inline-block; font: 700 26px/1 var(--f-mono); color: var(--accent-text); margin-right: 10px; }
+.pl-svg { display: block; width: 1664px; height: 170px; }
+.pl-der, .pl-izq { stroke-dasharray: 16 10; }
+@keyframes pldash { to { stroke-dashoffset: -52; } }
+.slide.active .pl-der, .slide.active .pl-izq { animation: pldash .8s linear infinite; }
+.pl-h { font: 600 30px/1.2 var(--f-head); margin: 0 0 12px !important; }
+.pl-row { display: grid; grid-template-columns: 330px 1fr 150px 120px; gap: 24px; align-items: center; margin: 14px 0; }
+.pl-row p { margin: 0 !important; font-size: 28px; }
+.pl-row b { font: 700 32px/1 var(--f-mono); color: var(--accent-text); margin-right: 10px; }
+.pl-track { height: var(--h); background: repeating-linear-gradient(180deg, var(--soft) 0 5px, #FFFFFF 5px 7px); outline: 2px solid var(--line); }
+.pl-track i { display: block; height: 100%; width: 0; background: repeating-linear-gradient(180deg, var(--accent) 0 5px, #F6B48A 5px 7px); }
+.pl.visible .pl-track i { width: 100%; transition: width var(--t) linear; }
+.pl-v { font: 700 26px/1 var(--f-mono) !important; color: var(--muted); text-align: right; }
+.pl-time { opacity: 0; font: 700 28px/1 var(--f-mono) !important; color: var(--accent-text); text-align: right; }
+.pl.visible .pl-time { opacity: 1; transition: opacity .2s linear var(--t); }
+.pm { display: grid; grid-template-columns: 460px 1fr; gap: 50px; align-items: center; }
+.pm-list p { font-size: 26px; line-height: 1.3; margin: 0 0 28px !important; }
+.pm-list b { display: block; font: 600 30px/1.2 var(--f-head); margin-bottom: 4px; }
+.pm-svg { display: block; width: 1154px; height: 417px; }
+.pm-v { font-size: 30px; font-weight: 700; fill: var(--accent-text); }
+.pc-svg { display: block; width: 1664px; height: 562px; }
+.pc-flow, .pc-link, .pc-in { stroke-dasharray: 12 8; }
+.slide.active .fragment.visible .pc-flow, .slide.active .fragment.visible .pc-link { animation: flow .9s linear infinite; }
+.slide.active .fragment.visible .pc-in { animation: flow 1.6s linear infinite; }
+body.overview .pa-flow, body.overview .pl-der, body.overview .pl-izq, body.overview .pc-flow, body.overview .pc-link, body.overview .pc-in,
+.speaker .pa-flow, .speaker .pl-der, .speaker .pl-izq, .speaker .pc-flow, .speaker .pc-link, .speaker .pc-in { animation: none !important; }
+@media print {
+  .pa-flow, .pl-der, .pl-izq, .pc-flow, .pc-link, .pc-in { animation: none !important; }
+  .pl-track i { width: 100% !important; }
+  .pl-time { opacity: 1 !important; }
+}
+
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -1014,68 +1052,100 @@ Ya lo cruzamos antes: el SSD NVMe también va por PCIe, y en la slide del DMA lo
   </aside>
 </section>
 
-<section class="slide" data-title="¿Qué es PCIe?">
-  <h2 class="title">¿Qué es PCIe?</h2>
-  <div class="mover">
-    <svg viewBox="0 0 1000 620" role="img" aria-label="La CPU conectada por 16 carriles PCIe a la GPU y por 4 carriles al SSD NVMe">
-      <rect x="30" y="150" width="220" height="370" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
-      <text class="svg-lbl" x="140" y="345" text-anchor="middle">CPU</text>
-      <rect x="720" y="120" width="250" height="250" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
-      <text class="svg-lbl" x="845" y="160" text-anchor="middle">GPU</text>
-      <rect x="745" y="300" width="200" height="50" style="fill:var(--navy)"/>
-      <text class="svg-lbl-light" x="845" y="333" text-anchor="middle" style="font-size:24px">ranura x16</text>
-      <rect x="720" y="430" width="250" height="140" style="fill:var(--soft);stroke:var(--ink);stroke-width:3"/>
-      <text class="svg-lbl" x="845" y="470" text-anchor="middle">SSD NVMe</text>
-      <rect x="745" y="500" width="200" height="44" style="fill:var(--navy)"/>
-      <text class="svg-lbl-light" x="845" y="530" text-anchor="middle" style="font-size:24px">M.2 x4</text>
-      <g class="lanes fragment" data-step="1">
-        <path d="M250 200 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-      </g>
-      <g class="lanes fragment" data-step="2">
-        <path d="M250 476 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 484 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 492 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 500 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <text class="svg-lbl" x="485" y="462" text-anchor="middle">x4 · ~8 GB/s</text>
-      </g>
-      <g class="lanes fragment" data-step="3">
-        <path d="M250 208 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 216 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 224 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 232 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 240 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 248 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 256 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 264 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 272 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 280 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 288 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 296 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 304 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 312 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <path d="M250 320 H720" style="fill:none;stroke:var(--accent);stroke-width:4"/>
-        <text class="svg-lbl" x="485" y="186" text-anchor="middle">x16 · ~32 GB/s</text>
-      </g>
-    </svg>
-    <div class="mover-txt">
-      <p class="step-p fragment" data-step="1"><span class="n">1</span><span><b>Un carril</b>: un par de cables para enviar y otro para recibir. En PCIe 4.0, ~2 GB/s en cada sentido.</span></p>
-      <p class="step-p fragment" data-step="2"><span class="n">2</span><span><b>x4</b>: el SSD NVMe usa 4 carriles, ~8 GB/s.</span></p>
-      <p class="step-p fragment" data-step="3"><span class="n">3</span><span><b>x16</b>: la GPU usa 16 carriles, ~32 GB/s.</span></p>
-    </div>
+<section class="slide" data-title="PCIe: tres partes">
+  <h2 class="title">PCIe es una conexión con tres partes</h2>
+  <svg class="pa-svg" viewBox="0 0 1664 490" role="img" aria-label="La CPU, con su controlador PCIe, conectada por 16 pistas de cobre de la placa madre a una ranura donde va la tarjeta de video, que tiene su propio controlador PCIe"><rect x="0" y="20" width="1090" height="460" style="fill:var(--soft);stroke:var(--line);stroke-width:2"/><text x="20" y="466" style="font:600 22px var(--f-text);fill:var(--muted)">placa madre</text><rect x="60" y="150" width="260" height="200" style="fill:var(--navy)"/><text class="svg-lbl-light" x="190" y="240" text-anchor="middle" style="font-size:38px">CPU</text><text x="190" y="282" text-anchor="middle" style="font:400 22px var(--f-text);fill:#B9C4CE">controlador PCIe</text><path class="pa-flow" d="M320 175 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 185 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 195 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 205 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 215 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 225 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 235 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 245 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 255 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 265 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 275 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 285 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 295 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 305 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 315 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><path class="pa-flow" d="M320 325 H962" style="fill:none;stroke:var(--accent);stroke-width:3"/><rect x="960" y="120" width="44" height="260" style="fill:var(--navy)"/><text class="svg-lbl" x="950" y="112" text-anchor="end" style="font-size:22px">ranura</text><rect x="1004" y="90" width="620" height="320" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><rect x="1006" y="171" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="181" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="191" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="201" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="211" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="221" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="231" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="241" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="251" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="261" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="271" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="281" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="291" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="301" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="311" width="14" height="7" style="fill:#C9A646"/><rect x="1006" y="321" width="14" height="7" style="fill:#C9A646"/><rect x="1050" y="190" width="190" height="120" style="fill:var(--blue)"/><text class="svg-lbl-light" x="1145" y="244" text-anchor="middle" style="font-size:24px">controlador</text><text class="svg-lbl-light" x="1145" y="274" text-anchor="middle" style="font-size:24px">PCIe</text><rect x="1340" y="150" width="230" height="200" style="fill:var(--navy)"/><text class="svg-lbl-light" x="1455" y="262" text-anchor="middle" style="font-size:38px">GPU</text><path d="M1240 250 H1340" style="fill:none;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1314" y="444" text-anchor="middle" style="font-size:24px">tarjeta de video</text><text class="svg-lbl" x="640" y="160" text-anchor="middle" style="font-size:22px">16 pistas de cobre</text><rect class="fragment" data-step="1" x="46" y="136" width="288" height="228" style="fill:none;stroke:var(--accent);stroke-width:6"/><rect class="fragment" data-step="2" x="328" y="132" width="690" height="268" style="fill:none;stroke:var(--accent);stroke-width:6"/><rect class="fragment" data-step="3" x="1036" y="176" width="218" height="148" style="fill:none;stroke:var(--accent);stroke-width:6"/></svg>
+  <div class="pa-steps">
+    <p class="fragment" data-step="1"><span>1</span><b>CPU:</b> tiene el controlador PCIe. De ella salen los carriles.</p>
+    <p class="fragment" data-step="2"><span>2</span><b>Placa madre:</b> lleva los carriles por pistas de cobre hasta la ranura.</p>
+    <p class="fragment" data-step="3"><span>3</span><b>Dispositivo:</b> tiene su propio controlador en el otro extremo.</p>
   </div>
+  <p class="fragment" data-step="4" style="margin-top:20px">PCIe no es una pieza: es un estándar, como USB. <b>Los dos extremos tienen que hablarlo</b> y la placa los une.</p>
   <div class="foot"></div>
   <aside class="notes">
-Tres clics.
+Cuatro clics. La idea que tiene que quedar: PCIe no es «de la placa» ni «de la GPU»; es la forma de conectar, y participan tres partes.
 
-PCIe (PCI Express) es la autopista que conecta la CPU con todo lo rápido: la GPU, el SSD NVMe, las tarjetas de red. Está hecha de carriles.
+Clic 1, la CPU: dentro del procesador está el controlador PCIe. Los carriles salen directamente de las patitas de la CPU. Un Ryzen 9 7950X, por ejemplo, saca 28 carriles.
 
-Clic 1: un carril son dos pares de cables, uno para cada sentido, que envían bits en serie a gran velocidad. Un carril PCIe 4.0 da ~2 GB/s en cada sentido, al mismo tiempo.
+Clic 2, la placa madre: no genera PCIe. Pone las pistas de cobre que llevan esos carriles hasta cada ranura, y el fabricante decide, al diseñarla, cuántos carriles van a cada ranura.
 
-Clic 2: los dispositivos usan varios carriles y las velocidades se suman. Un SSD NVMe usa 4 (x4): ~8 GB/s. Por eso un NVMe Gen4 anuncia ~7 GB/s: es casi el máximo de su conexión.
+Clic 3, el dispositivo (aquí la GPU): en su chip tiene su propio controlador PCIe, y en el borde de la tarjeta los contactos dorados que entran en la ranura.
 
-Clic 3: la GPU usa 16 carriles (x16): ~32 GB/s en PCIe 4.0. Es la ranura larga de la placa.
+Clic 4: es como USB: el computador y el aparato tienen que hablar el mismo idioma, y el cable los une. Con PCIe, los dos extremos son chips (CPU y dispositivo) y el «cable» son las pistas de la placa.
+  </aside>
+</section>
 
-Los carriles salen directamente del procesador (una CPU de PC tiene ~20–28; un servidor, 128 o más) o de un chip auxiliar de la placa (chipset), que a su vez se conecta a la CPU por un enlace más estrecho.
+<section class="slide" data-title="Carriles: x1, x4, x16">
+  <h2 class="title">Un carril, y por qué x16 es más rápido que x4</h2>
+  <svg class="pl-svg" viewBox="0 0 1664 170" role="img" aria-label="Un carril PCIe: un par de cables que envía de la CPU a la GPU y otro que recibe en sentido contrario, al mismo tiempo"><rect x="0" y="30" width="170" height="130" style="fill:var(--navy)"/><text class="svg-lbl-light" x="85" y="104" text-anchor="middle" style="font-size:32px">CPU</text><rect x="1494" y="30" width="170" height="130" style="fill:var(--navy)"/><text class="svg-lbl-light" x="1579" y="104" text-anchor="middle" style="font-size:32px">GPU</text><path class="pl-der" d="M170 72 H1494" style="fill:none;stroke:var(--accent);stroke-width:6"/><path class="pl-izq" d="M1494 118 H170" style="fill:none;stroke:var(--blue);stroke-width:6"/><text class="svg-lbl" x="832" y="52" text-anchor="middle" style="font-size:24px">un par de cables para enviar →</text><text class="svg-lbl" x="832" y="156" text-anchor="middle" style="font-size:24px;fill:var(--blue)">← otro par para recibir</text></svg>
+  <p class="small" style="margin:6px 0 26px">Un carril de PCIe 4.0 lleva ~2 GB/s en cada sentido, al mismo tiempo.</p>
+  <div class="pl fragment play" data-step="1">
+    <p class="pl-h">Copiar 1 GB con 1, 4 y 16 carriles</p>
+    <div class="pl-row"><p><b>x1</b> tarjeta de red</p><div class="pl-track" style="--h:8px"><i style="--t:5.0s"></i></div><p class="pl-v">~2 GB/s</p><p class="pl-time" style="--t:5.0s">0,5 s</p></div><div class="pl-row"><p><b>x4</b> SSD NVMe</p><div class="pl-track" style="--h:28px"><i style="--t:1.25s"></i></div><p class="pl-v">~8 GB/s</p><p class="pl-time" style="--t:1.25s">0,13 s</p></div><div class="pl-row"><p><b>x16</b> GPU</p><div class="pl-track" style="--h:112px"><i style="--t:0.31s"></i></div><p class="pl-v">~32 GB/s</p><p class="pl-time" style="--t:0.31s">0,03 s</p></div>
+  </div>
+  <p class="fragment" data-step="2" style="margin-top:18px">Cada carril es un cable propio entre dos puntos fijos: <b>16 carriles, 16 veces la velocidad de uno</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Dos clics.
+
+Arriba, un solo carril: son dos pares de cables. Uno envía de la CPU a la GPU (naranja) y el otro, al mismo tiempo, envía en sentido contrario (azul). Por cada par viajan bits en fila, uno tras otro, a 16 mil millones por segundo en PCIe 4.0: ~2 GB/s en cada sentido.
+
+Clic 1, la carrera: el mismo GB por 1, 4 y 16 carriles. Los carriles trabajan en paralelo, así que la velocidad se suma: x1 ~2 GB/s (medio segundo), x4 ~8 GB/s (~0,13 s), x16 ~32 GB/s (~0,03 s). El grosor de cada pista es proporcional a los carriles. En la animación, el tiempo va 10 veces más lento.
+
+«x16» se lee «por dieciséis»: el número de carriles de esa conexión. Ejemplos típicos: una tarjeta de red usa x1, un SSD NVMe x4, una GPU x16.
+
+Clic 2: cada carril es físico, un cable que une dos puntos fijos (por ejemplo, la CPU con la ranura de la GPU). No es un pasillo compartido que cualquiera puede usar: los 16 carriles de la GPU son solo de la GPU.
+  </aside>
+</section>
+
+<section class="slide" data-title="¿x16 o x4?">
+  <h2 class="title">¿x16 o x4? Manda el más chico de los tres</h2>
+  <div class="pm">
+    <div class="pm-list">
+      <p><b>CPU</b>cuántos carriles tiene en total. Un Ryzen 9 7950X: 28.</p>
+      <p><b>Placa madre</b>cuántos lleva a cada ranura.</p>
+      <p><b>Dispositivo</b>cuántos sabe usar: GPU 16, SSD NVMe 4, tarjeta de red 1.</p>
+    </div>
+    <svg class="pm-svg" viewBox="0 0 1300 470" role="img" aria-label="La CPU lleva 16 carriles a la ranura 1 y solo 4 a la ranura 2, aunque las dos ranuras se ven iguales"><rect x="0" y="40" width="190" height="420" style="fill:var(--navy)"/><text class="svg-lbl-light" x="95" y="262" text-anchor="middle" style="font-size:34px">CPU</text><rect x="600" y="70" width="380" height="44" style="fill:var(--navy)"/><text class="svg-lbl" x="790" y="56" text-anchor="middle" style="font-size:24px">ranura 1</text><rect x="600" y="370" width="380" height="44" style="fill:var(--navy)"/><text class="svg-lbl" x="790" y="356" text-anchor="middle" style="font-size:24px">ranura 2 (igual de larga)</text><g class="fragment" data-step="1"><path d="M190 80 C400 80, 400 74.0, 600 74.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 89 C400 89, 400 76.2, 600 76.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 98 C400 98, 400 78.4, 600 78.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 107 C400 107, 400 80.6, 600 80.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 116 C400 116, 400 82.8, 600 82.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 125 C400 125, 400 85.0, 600 85.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 134 C400 134, 400 87.2, 600 87.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 143 C400 143, 400 89.4, 600 89.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 152 C400 152, 400 91.6, 600 91.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 161 C400 161, 400 93.8, 600 93.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 170 C400 170, 400 96.0, 600 96.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 179 C400 179, 400 98.2, 600 98.2" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 188 C400 188, 400 100.4, 600 100.4" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 197 C400 197, 400 102.6, 600 102.6" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 206 C400 206, 400 104.8, 600 104.8" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 215 C400 215, 400 107.0, 600 107.0" style="fill:none;stroke:var(--accent);stroke-width:3"/><text class="svg-lbl pm-v" x="1000" y="102">16 carriles · x16</text></g><g class="fragment" data-step="2"><path d="M190 380 C400 380, 400 378, 600 378" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 392 C400 392, 400 387, 600 387" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 404 C400 404, 400 396, 600 396" style="fill:none;stroke:var(--accent);stroke-width:3"/><path d="M190 416 C400 416, 400 405, 600 405" style="fill:none;stroke:var(--accent);stroke-width:3"/><text class="svg-lbl pm-v" x="1000" y="402">solo 4 carriles · x4</text><text x="600" y="448" style="font:400 22px var(--f-text);fill:var(--muted)">el manual dice «x16 (x4 mode)»</text></g></svg>
+  </div>
+  <p class="fragment" data-step="3" style="margin-top:24px">Una GPU x16 en la ranura 2 funciona a <b>x4: un cuarto de la velocidad</b>. Se ve con <span class="ve-code">nvidia-smi</span>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Tres clics. A la izquierda, los tres límites; a la derecha, un ejemplo real.
+
+La conexión usa el número más chico de los tres:
+- La CPU tiene una cantidad fija de carriles (un Ryzen 9 7950X tiene 28; un Core i9 de escritorio, 20; un servidor, más de 100) y los reparte en grupos.
+- La placa madre decide cuántos lleva a cada ranura. Eso no se cambia: son pistas de cobre.
+- El dispositivo usa los que sabe usar.
+
+Clic 1: la ranura 1, la larga de arriba, recibe 16 carriles de la CPU. Ahí va la GPU.
+
+Clic 2: muchas placas tienen una segunda ranura igual de larga, pero por dentro solo tiene 4 carriles conectados. En el manual aparece como «x16 (x4 mode)» o «x16 física, x4 eléctrica».
+
+Clic 3: si la GPU (que sabe usar 16) va en la ranura 2, la conexión queda en x4: un cuarto de la velocidad. Funciona, pero copiar datos a la GPU tarda cuatro veces más. Se comprueba con el nvidia-smi de unas slides más adelante.
+
+Si preguntan: en algunas placas, usar ciertas ranuras M.2 le quita carriles a la ranura de la GPU (de x16 a x8). Está en el manual.
+  </aside>
+</section>
+
+<section class="slide" data-title="Mapa: CPU y chipset">
+  <h2 class="title">Qué va directo a la CPU y qué pasa por el chipset</h2>
+  <svg class="pc-svg" viewBox="0 0 1600 540" role="img" aria-label="La GPU y el SSD NVMe van directo a la CPU por 16 y 4 carriles. El chipset se conecta a la CPU por un enlace de 4 carriles y de él cuelgan el disco duro, el SSD SATA, el USB, un segundo NVMe, la red y las ranuras chicas"><g class=""><rect x="620" y="20" width="300" height="130" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="770.0" y="83.0" text-anchor="middle" style="font-size:28px">CPU</text><text x="770.0" y="113.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:#B9C4CE"></text></g><g class="fragment" data-step="1"><path class="pc-flow" d="M920 60 H1230" style="fill:none;stroke:var(--accent);stroke-width:22"/><path class="pc-flow" d="M920 125 H1230" style="fill:none;stroke:var(--accent);stroke-width:7"/><text class="svg-lbl" x="1075" y="38" text-anchor="middle" style="font-size:22px">x16 · ~32 GB/s</text><text class="svg-lbl" x="1075" y="108" text-anchor="middle" style="font-size:22px">x4 · ~8 GB/s</text><g class=""><rect x="1230" y="14" width="340" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1400.0" y="57.0" text-anchor="middle" style="font-size:28px">GPU</text><text x="1400.0" y="87.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">directo a la CPU</text></g><g class=""><rect x="1230" y="118" width="340" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1400.0" y="161.0" text-anchor="middle" style="font-size:28px">SSD NVMe</text><text x="1400.0" y="191.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">directo a la CPU</text></g></g><g class="fragment" data-step="2"><path class="pc-link" d="M770 150 V330" style="fill:none;stroke:var(--accent);stroke-width:7"/><text class="svg-lbl" x="726" y="236" text-anchor="end" style="font-size:22px">enlace x4 · ~8 GB/s</text><g class=""><rect x="620" y="330" width="300" height="120" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="770.0" y="388.0" text-anchor="middle" style="font-size:28px">Chipset</text><text x="770.0" y="418.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">chip de la placa madre</text></g></g><g class="fragment" data-step="3"><path class="pc-in" d="M380 262 C500 262, 500 390, 620 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="30" y="217" width="350" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="205.0" y="260.0" text-anchor="middle" style="font-size:28px">Disco duro</text><text x="205.0" y="290.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">SATA · ~0,15 GB/s</text></g><path class="pc-in" d="M380 376 C500 376, 500 390, 620 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="30" y="331" width="350" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="205.0" y="374.0" text-anchor="middle" style="font-size:28px">SSD SATA</text><text x="205.0" y="404.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">SATA · ~0,55 GB/s</text></g><path class="pc-in" d="M380 490 C500 490, 500 390, 620 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="30" y="445" width="350" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="205.0" y="488.0" text-anchor="middle" style="font-size:28px">USB</text><text x="205.0" y="518.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">discos externos, teclado</text></g><path class="pc-in pc-r" d="M1230 262 C1100 262, 1100 390, 920 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="1230" y="217" width="340" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1400.0" y="260.0" text-anchor="middle" style="font-size:28px">Segundo NVMe</text><text x="1400.0" y="290.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">x4</text></g><path class="pc-in pc-r" d="M1230 376 C1100 376, 1100 390, 920 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="1230" y="331" width="340" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1400.0" y="374.0" text-anchor="middle" style="font-size:28px">Red y wifi</text><text x="1400.0" y="404.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)"></text></g><path class="pc-in pc-r" d="M1230 490 C1100 490, 1100 390, 920 390" style="fill:none;stroke:var(--slate);stroke-width:4"/><g class=""><rect x="1230" y="445" width="340" height="90" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1400.0" y="488.0" text-anchor="middle" style="font-size:28px">Ranuras chicas</text><text x="1400.0" y="518.0" text-anchor="middle" style="font:400 21px var(--f-text);fill:var(--muted)">x1</text></g></g><g class="fragment pc-hl" data-step="4"><rect x="742" y="156" width="56" height="170" style="fill:none;stroke:var(--accent);stroke-width:5;stroke-dasharray:10 6"/><text class="svg-lbl pm-v" x="810" y="250">todos comparten este tubo</text></g></svg>
+  <p class="fragment" data-step="4" style="margin-top:16px">Todo lo que cuelga del chipset <b>comparte un solo enlace</b> hacia la CPU: ~8 GB/s para todos.</p>
+  <p class="fragment" data-step="5" style="margin-top:8px">El disco duro <b>no usa PCIe</b>: habla SATA con el chipset. Su techo, ~0,55 GB/s, lo pone ese cable.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Cinco clics. Es el mapa de una placa de escritorio con un Ryzen 9 7950X (en Intel es parecido).
+
+Clic 1, lo importante va directo a la CPU, por carriles propios: la GPU por 16 carriles (~32 GB/s en PCIe 4.0; el doble en 5.0) y el SSD NVMe principal por 4 (~8 GB/s). (Este procesador trae 4 carriles más para un segundo NVMe directo.)
+
+Clic 2, el chipset: es otro chip en la placa madre, que reparte conexiones para todo lo demás. Se une a la CPU por un enlace de 4 carriles: ~8 GB/s en AMD (en Intel se llama DMI y en las placas recientes da ~16 GB/s).
+
+Clic 3, lo que cuelga del chipset: discos por cable SATA (disco duro y SSD SATA), USB, un segundo NVMe, la red y el wifi, las ranuras chicas x1.
+
+Clic 4: cada uno tiene su propia conexión al chipset, pero para llegar a la CPU todos pasan por el mismo enlace de ~8 GB/s, como varios enchufes en una regleta. Si se copia del segundo NVMe a un disco USB mientras se baja algo por la red, todos se reparten ese tubo.
+
+Clic 5: el disco duro y el SSD SATA no usan PCIe: hablan SATA (otro estándar, más viejo) con el chipset. SATA tiene un techo de ~0,55 GB/s; por eso un SSD SATA nunca pasa de ahí, y un disco duro ni siquiera llega (~0,15). El NVMe, en cambio, es PCIe puro: NVMe es el idioma que usa el SSD para hablar por PCIe.
   </aside>
 </section>
 
