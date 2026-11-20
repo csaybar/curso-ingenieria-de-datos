@@ -1799,7 +1799,7 @@ Si preguntan: en la práctica las bandas de Sentinel-2 vienen en uint16 (la mita
     <ol class="smi-list">
       <li class="fragment" data-step="1">Qué GPU es, y las versiones del driver y de CUDA.</li>
       <li class="fragment" data-step="2"><b>Memory-Usage</b>: VRAM ocupada / total. Si se llena, el programa se cae.</li>
-      <li class="fragment" data-step="3"><b>GPU-Util</b>: el % del tiempo en que la GPU estuvo haciendo algo. No es el % de núcleos ocupados.</li>
+      <li class="fragment" data-step="3"><b>GPU-Util</b>: de cada segundo, cuánto tiempo estuvo la GPU corriendo algo. 97 % = 0,97 s trabajando y 0,03 s esperando. No dice cuántos núcleos usó.</li>
       <li class="fragment" data-step="4">Temperatura y consumo: una RTX 4090 puede gastar 450 W.</li>
     </ol>
   </div>
@@ -1812,7 +1812,7 @@ nvidia-smi viene con los drivers de NVIDIA, en Linux y en Windows. Es lo primero
 
 1. El nombre de la GPU y las versiones del driver y de CUDA. «CUDA Version» es la versión máxima que soporta ese driver, no necesariamente la que está instalada.
 2. Memory-Usage: cuánta VRAM está ocupada y cuánta hay. Cuando un programa pide más de la que queda, falla con un error de memoria insuficiente.
-3. GPU-Util: el porcentaje del tiempo, en el último instante medido, en que la GPU estuvo ejecutando algo. Ojo: 100 % no quiere decir que los 16 384 núcleos estén trabajando; puede ser un programa que usa una fracción de la GPU todo el tiempo. Un número bajo, en cambio, casi siempre significa que la GPU espera datos (del disco, de la CPU o de PCIe): el problema de toda la clase.
+3. GPU-Util: nvidia-smi mira un intervalo corto (hasta 1 segundo) y cuenta qué parte de ese tiempo hubo al menos un programa (un kernel) corriendo en la GPU. 97 % quiere decir que de cada segundo la GPU estuvo trabajando 0,97 s y parada 0,03 s. Es como contar cuánto tiempo estuvo encendida la cocina, no cuántos cocineros trabajaban. Ojo: 100 % no quiere decir que los 16 384 núcleos estén trabajando; puede ser un programa que usa una fracción de la GPU todo el tiempo. Un número bajo, en cambio, casi siempre significa que la GPU espera datos (del disco, de la CPU o de PCIe): el problema de toda la clase.
 4. Temperatura y consumo: sirven para ver si la GPU está trabajando de verdad (consumo alto) o si se está calentando y bajando la velocidad.
 
 nvidia-smi -l 1 repite la medición cada segundo; en Linux también se puede usar watch -n 1 nvidia-smi.
