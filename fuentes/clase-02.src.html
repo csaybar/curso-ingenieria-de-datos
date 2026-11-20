@@ -1043,6 +1043,7 @@ body.overview .nh-px, body.overview .nh-turno, .speaker .nh-px, .speaker .nh-tur
 /* El chip y el trabajo */
 .fl-svg { display: block; width: 1664px; height: 560px; }
 
+.mp-svg { display: block; width: 1664px; height: 494px; }
 /* Lista de URIs */
 .uri { font-family: var(--f-mono); font-size: 24px; word-break: break-all; }
 </style>
@@ -1628,7 +1629,7 @@ Dos clics. El chip es el de una RTX 4090, simplificado.
 
 Al llegar: los 128 rectángulos naranjas son los SM (streaming multiprocessors). Un SM es lo más parecido a un núcleo de CPU: tiene su propia unidad de control, sus registros y su caché L1. Pero adentro no hay una ALU sino 128.
 
-Clic 1, un SM por dentro: está partido en cuatro. Cada cuarto tiene 32 núcleos CUDA (ALU sencillas para sumar y multiplicar decimales), un núcleo tensorial (lo vemos en unas slides) y 64 KB de registros. Abajo, 128 KB de L1 que el programa también puede usar como «memoria compartida» entre los hilos del SM. Total por SM: 128 núcleos CUDA, 4 tensoriales, 256 KB de registros.
+Clic 1, un SM por dentro: está partido en cuatro. Cada cuarto tiene 32 núcleos CUDA (ALU sencillas para sumar y multiplicar decimales), un núcleo tensorial (especializado en multiplicar matrices) y 64 KB de registros. Abajo, 128 KB de L1 que el programa también puede usar como «memoria compartida» entre los hilos del SM. Total por SM: 128 núcleos CUDA, 4 tensoriales, 256 KB de registros.
 
 Clic 2: en el medio, la caché L2 de 72 MB, compartida por todos los SM (la L3 de la CPU cumple el mismo papel). A los lados, los controladores de memoria, y afuera los 12 chips de GDDR6X de 2 GB: 24 GB conectados por 12 × 32 = 384 cables de datos. Es lo de «un bus muy ancho».
 
@@ -1775,39 +1776,6 @@ Clic 2: la GPU gana en dos casos. Uno, cuando los datos se quedan en la VRAM y s
 Si preguntan: en la práctica las bandas de Sentinel-2 vienen en uint16 (la mitad de bytes), y se puede solapar la copia con el cálculo; los números cambian, la conclusión no.
   </aside>
 </section>
-<section class="slide" data-title="Núcleos tensoriales">
-  <h2 class="title">Núcleos tensoriales: multiplicar matrices de una vez</h2>
-  <div class="tc">
-    <div class="tc-left">
-      <div><p class="tc-h">Núcleos normales<span>64 multiplicaciones y sumas, una por una</span></p><div class="tc-grid tc-n"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i><i style="--k:6"></i><i style="--k:7"></i><i style="--k:8"></i><i style="--k:9"></i><i style="--k:10"></i><i style="--k:11"></i><i style="--k:12"></i><i style="--k:13"></i><i style="--k:14"></i><i style="--k:15"></i></div><p class="tc-cnt"><b class="tc-k"></b> pasos</p></div>
-      <div><p class="tc-h">Núcleo tensorial<span>las 64 en una sola instrucción</span></p><div class="tc-grid tc-t"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p class="tc-cnt"><b>1</b> paso</p></div>
-    </div>
-    <div class="tc-right">
-      <p class="tc-h">H100: billones de operaciones por segundo (TFLOPS)</p><div class="tc-row"><p>FP32, núcleos CUDA</p><div class="tc-bar"><i style="--w:17px;--d:0.0s"></i><span>67</span></div></div><div class="tc-row"><p>TF32, tensoriales</p><div class="tc-bar"><i style="--w:124px;--d:0.3s"></i><span>495</span></div></div><div class="tc-row"><p>BF16, tensoriales</p><div class="tc-bar"><i style="--w:247px;--d:0.6s"></i><span>989</span></div></div><div class="tc-row"><p>FP8, tensoriales</p><div class="tc-bar"><i style="--w:495px;--d:0.9s"></i><span>1 979</span></div></div>
-    </div>
-  </div>
-  <p class="fragment" data-step="1" style="margin-top:30px">Multiplicar matrices es la cuenta central de las redes neuronales: <b>por eso las GPU modernas traen estos núcleos</b>.</p>
-  <p class="fragment" data-step="2" style="margin-top:8px">Rinden más con números de <b>16 u 8 bits</b>: menos precisión, mucha más velocidad.</p>
-  <div class="foot"></div>
-  <aside class="notes">
-Dos clics. Las dos cuadrículas se llenan solas y se repiten; las barras crecen al llegar.
-
-Izquierda: el resultado de multiplicar dos matrices de 4 × 4 es otra de 4 × 4, y cada casilla necesita 4 multiplicaciones y 4 sumas: 64 en total. Con núcleos normales eso son 64 instrucciones de multiplicar y sumar (FMA), una tras otra; la cuadrícula se va llenando de a poco. Un núcleo tensorial hace la operación completa en una instrucción: la cuadrícula se llena de golpe. (El tamaño real del bloque cambia según la generación; 4 × 4 es la idea original de 2017.)
-
-Derecha, una H100 en TFLOPS (billones de operaciones por segundo, sin contar la «dispersión»):
-- FP32 en los núcleos CUDA normales: ~67.
-- TF32 en los tensoriales: ~495. Es un formato de 19 bits que la GPU usa por dentro cuando se le pasa float32.
-- BF16 (16 bits): ~989.
-- FP8 (8 bits): ~1 979.
-Treinta veces más que los núcleos normales.
-
-Clic 1: las redes neuronales son, sobre todo, multiplicaciones de matrices enormes; por eso NVIDIA agregó estos núcleos desde 2017 (Volta) y por eso dominan este campo.
-
-Clic 2: con menos bits por número caben más números en cada registro y en cada viaje a la memoria, y los circuitos son más chicos. Se pierde precisión: float32 tiene ~7 dígitos significativos; BF16, ~3. Para muchos cálculos con imágenes alcanza; para otros no.
-
-En una RTX 4090: ~83 TFLOPS en FP32 y ~165 en FP16 con los tensoriales.
-  </aside>
-</section>
 <section class="slide" data-title="¿Qué GPU tengo?">
   <h2 class="title">¿Qué GPU tengo y qué está haciendo?</h2>
   <div class="smi">
@@ -1847,6 +1815,36 @@ nvidia-smi -l 1 repite la medición cada segundo; en Linux también se puede usa
 
 <!-- ===================== CIERRE ===================== -->
 
+<section class="slide" data-title="El mapa completo">
+  <h2 class="title">Del disco a un núcleo de la GPU</h2>
+  <p class="lead">Por dónde pasa un dato y cuánto tarda en llegar desde cada lugar.</p>
+  <svg class="mp-svg" viewBox="0 0 1664 494" role="img" aria-label="Mapa del camino de un dato desde el disco hasta un núcleo de la GPU, con lo que tarda en llegar un dato desde cada lugar. En la placa madre: disco SSD NVMe, 0,1 milisegundos (un día si 1 ns fuera 1 segundo), unido a la RAM por PCIe x4 a 7 GB/s; RAM, 100 nanosegundos (1,5 minutos). De la RAM a la tarjeta de video por PCIe x16 a 32 GB/s: cruzarlo tarda 1 microsegundo (17 minutos). En la tarjeta: VRAM de 24 GB, 400 nanosegundos (7 minutos), a 1 000 GB/s hacia la L2 de 72 MB, 100 nanosegundos (1,5 minutos), a 5 000 GB/s hacia la L1 de cada SM, 20 nanosegundos (20 segundos), a 40 000 GB/s hacia los registros, menos de 1 nanosegundo, y de ahí al núcleo que hace la cuenta."><path d="M1 116 V104 H379 V116" style="fill:none;stroke:var(--muted);stroke-width:2"/><text x="2" y="95" style="font:600 21px var(--f-text);fill:var(--muted)">Placa madre</text><path d="M551 44 V32 H1619 V44" style="fill:none;stroke:var(--muted);stroke-width:2"/><text x="552" y="23" style="font:600 21px var(--f-text);fill:var(--muted)">Tarjeta de video (RTX 4090)</text><path d="M781 80 V68 H1619 V80" style="fill:none;stroke:var(--muted);stroke-width:2"/><text x="782" y="59" style="font:600 21px var(--f-text);fill:var(--muted)">Chip de la GPU</text><path d="M1011 116 V104 H1619 V116" style="fill:none;stroke:var(--muted);stroke-width:2"/><text x="1012" y="95" style="font:600 21px var(--f-text);fill:var(--muted)">Dentro de cada SM</text><rect x="0" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="75.0" y="174" text-anchor="middle" style="font-size:28px">Disco</text><text x="75.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">SSD NVMe</text><rect x="230" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="305.0" y="174" text-anchor="middle" style="font-size:28px">RAM</text><text x="305.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">DDR5</text><rect x="550" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="625.0" y="174" text-anchor="middle" style="font-size:28px">VRAM</text><text x="625.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">24 GB</text><rect x="780" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="855.0" y="174" text-anchor="middle" style="font-size:28px">L2</text><text x="855.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">72 MB</text><rect x="1010" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1085.0" y="174" text-anchor="middle" style="font-size:28px">L1</text><text x="1085.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">128 KB</text><rect x="1240" y="124" width="150" height="104" style="fill:#FFFFFF;stroke:var(--ink);stroke-width:3"/><text class="svg-lbl" x="1315.0" y="174" text-anchor="middle" style="font-size:28px">Registros</text><text x="1315.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:var(--muted)">256 KB</text><rect x="1470" y="124" width="150" height="104" style="fill:var(--navy);stroke:var(--ink);stroke-width:3"/><text class="svg-lbl-light" x="1545.0" y="174" text-anchor="middle" style="font-size:28px">Núcleo</text><text x="1545.0" y="206" text-anchor="middle" style="font:400 19px var(--f-text);fill:#FFFFFF">hace la cuenta</text><path d="M156 194.0 H214" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M212 184.0 L226 194.0 L212 204.0 Z" style="fill:var(--slate)"/><text x="190.0" y="154.0" text-anchor="middle" style="font:600 18px var(--f-text);fill:var(--ink)">7 GB/s</text><text x="190.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)">PCIe x4</text><path d="M386 194.0 H534" style="fill:none;stroke:var(--accent);stroke-width:4"/><path d="M532 184.0 L546 194.0 L532 204.0 Z" style="fill:var(--accent)"/><text x="465.0" y="154.0" text-anchor="middle" style="font:700 18px var(--f-text);fill:var(--accent)">PCIe x16</text><text x="465.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)">32 GB/s</text><path d="M706 194.0 H764" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M762 184.0 L776 194.0 L762 204.0 Z" style="fill:var(--slate)"/><text x="740.0" y="154.0" text-anchor="middle" style="font:600 18px var(--f-text);fill:var(--ink)">1 000</text><text x="740.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)">GB/s</text><path d="M936 194.0 H994" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M992 184.0 L1006 194.0 L992 204.0 Z" style="fill:var(--slate)"/><text x="970.0" y="154.0" text-anchor="middle" style="font:600 18px var(--f-text);fill:var(--ink)">5 000</text><text x="970.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)">GB/s</text><path d="M1166 194.0 H1224" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M1222 184.0 L1236 194.0 L1222 204.0 Z" style="fill:var(--slate)"/><text x="1200.0" y="154.0" text-anchor="middle" style="font:600 18px var(--f-text);fill:var(--ink)">40 000</text><text x="1200.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)">GB/s</text><path d="M1396 194.0 H1454" style="fill:none;stroke:var(--slate);stroke-width:4"/><path d="M1452 184.0 L1466 194.0 L1452 204.0 Z" style="fill:var(--slate)"/><text x="1430.0" y="154.0" text-anchor="middle" style="font:600 18px var(--f-text);fill:var(--ink)"></text><text x="1430.0" y="175.0" text-anchor="middle" style="font:500 17px var(--f-text);fill:var(--muted)"></text><text x="0" y="290" style="font:600 22px var(--f-text);fill:var(--muted)">Cuánto tarda en llegar un dato desde ahí</text><text class="svg-lbl" x="75.0" y="336" text-anchor="middle" style="font-size:30px">~0,1 ms</text><text class="svg-lbl" x="305.0" y="336" text-anchor="middle" style="font-size:30px">~100 ns</text><text class="svg-lbl" x="465.0" y="336" text-anchor="middle" style="font-size:30px">~1 µs</text><text class="svg-lbl" x="625.0" y="336" text-anchor="middle" style="font-size:30px">~400 ns</text><text class="svg-lbl" x="855.0" y="336" text-anchor="middle" style="font-size:30px">~100 ns</text><text class="svg-lbl" x="1085.0" y="336" text-anchor="middle" style="font-size:30px">~20 ns</text><text class="svg-lbl" x="1315.0" y="336" text-anchor="middle" style="font-size:30px">&lt; 1 ns</text><text x="0" y="390" style="font:600 22px var(--f-text);fill:var(--muted)">Lo mismo si 1 ns fuera 1 segundo</text><text class="svg-lbl" x="75.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">1 día</text><text class="svg-lbl" x="305.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">1,5 minutos</text><text class="svg-lbl" x="465.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">17 minutos</text><text class="svg-lbl" x="625.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">7 minutos</text><text class="svg-lbl" x="855.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">1,5 minutos</text><text class="svg-lbl" x="1085.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">20 segundos</text><text class="svg-lbl" x="1315.0" y="432" text-anchor="middle" style="font-size:26px;fill:var(--accent)">&lt; 1 segundo</text><text x="75.0" y="464" text-anchor="middle" style="font:400 18px var(--f-text);fill:var(--muted)">disco duro:</text><text x="75.0" y="486" text-anchor="middle" style="font:400 18px var(--f-text);fill:var(--muted)">10 ms · 4 meses</text><text x="465.0" y="464" text-anchor="middle" style="font:400 18px var(--f-text);fill:var(--muted)">cruzar PCIe</text></svg>
+  <p style="margin-top:18px">RAM y VRAM tardan parecido por dato; lo que cambia son los GB/s: <b>32 por PCIe, 1 000 en la VRAM</b>.</p>
+  <div class="foot"></div>
+  <aside class="notes">
+Sin clics. Es el mapa entero, de izquierda a derecha: lo que vimos en la clase pasada (disco, RAM) y lo de hoy (PCIe, VRAM y las memorias de adentro de la GPU).
+
+Arriba, los corchetes dicen dónde está cada cosa: en la placa madre, en la tarjeta de video, dentro del chip de la GPU y dentro de un SM. Sobre cada flecha, cuántos GB/s pasan por ese tramo. La flecha naranja es PCIe, el tramo angosto.
+
+Abajo, dos filas de tiempos. La primera: cuánto tarda en llegar un dato suelto desde ese lugar. La segunda: la misma escala de la clase pasada, en la que 1 nanosegundo pasa a ser 1 segundo.
+
+- Disco NVMe: ~0,1 ms, un día. Un disco duro: ~10 ms, cuatro meses.
+- RAM: ~100 ns, un minuto y medio.
+- Cruzar PCIe hasta la GPU: del orden de 1 µs (un par de microsegundos en la práctica), unos 17 minutos. Pedir una copia desde Python con cudaMemcpy cuesta más, decenas de microsegundos, porque se suma el trabajo del driver.
+- VRAM: ~400 ns, 7 minutos. Más que la RAM.
+- L2: ~100 ns, un minuto y medio.
+- L1 / memoria compartida: ~20 ns, 20 segundos.
+- Registros: en el mismo ciclo, menos de 1 ns.
+
+Línea final: la latencia (un dato suelto) es parecida en la RAM y en la VRAM; lo que hace rápida a la GPU es la cantidad que entrega por segundo y que esconde la espera con muchos warps. El cuello está en PCIe: 32 GB/s contra 1 000 GB/s.
+
+Los GB/s de las flechas son de todo el chip junto: 5 000 GB/s de L2 medidos con todos los SM trabajando; 40 000 GB/s de L1 es el máximo teórico (128 SM × 128 bytes por ciclo × 2,5 GHz).
+
+Las latencias de la GPU son aproximadas: NVIDIA no las publica y salen de mediciones independientes. Cambian con cada generación, pero el orden de magnitud se mantiene.
+
+Fuentes: NVIDIA Ada GPU Architecture whitepaper (tamaños); Chips and Cheese, «Microbenchmarking Nvidia's RTX 4090» (L2 de ~5 TB/s); NVIDIA, «Benchmarking GPUDirect RDMA» (latencias de PCIe de 1–2 µs).
+  </aside>
+</section>
 <section class="slide orange" data-title="El camino completo">
   <p class="eyebrow">Resumen</p>
   <h1 class="st-title">El camino<br>completo</h1>
