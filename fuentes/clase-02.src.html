@@ -413,7 +413,7 @@ body.overview .cyc, .speaker .cyc { --c: 400; animation: none !important; }
 body.overview .dram-sweep, .speaker .dram-sweep { animation: none !important; }
 
 /* Bus de memoria y gráfico final */
-.bus-svg { display: block; width: 1664px; height: 560px; }
+.bus-svg { display: block; width: 1664px; height: 490px; }
 .sum-svg { display: block; width: 1664px; height: 690px; }
 
 /* ¿Por qué tantos archivos son más lentos? */
@@ -1421,28 +1421,29 @@ Latencia: curiosamente, la VRAM tarda más que la RAM en entregar un dato suelto
 </section>
 
 <section class="slide" data-title="Un bus muy ancho">
-  <h2 class="title">El secreto de la VRAM: un bus muy ancho</h2>
-  <svg class="bus-svg" viewBox="0 0 1664 560" role="img" aria-label="Comparación del ancho del bus: la RAM de un PC usa 128 bits, la GDDR6X 384 bits y la HBM3 5120 bits">
+  <h2 class="title">¿Por qué la VRAM es tan rápida? Muchos cables a la vez</h2>
+  <p class="lead"><b>Bus</b>: los cables entre la memoria y el chip. Más cables a la vez, más datos por segundo.</p>
+  <svg class="bus-svg" viewBox="0 0 1664 560" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Cuántos cables unen la memoria con el chip: la RAM de un PC usa 128, la GDDR6X de una RTX 4090 usa 384 y la HBM3 de una H100 usa 5120">
     <defs>
       <pattern id="wires" width="10" height="3" patternUnits="userSpaceOnUse"><rect width="10" height="1.6" style="fill:var(--ink)"/></pattern>
     </defs>
     <g class="fragment" data-step="1">
       <text class="svg-lbl" x="0" y="34">RAM de un PC</text>
-      <text class="svg-lbl" x="0" y="66" style="font-size:24px;fill:var(--muted)">128 bits × 5,6 Gb/s</text>
+      <text class="svg-lbl" x="0" y="66" style="font-size:24px;fill:var(--muted)">128 cables × 5,6 Gb/s cada uno</text>
       <rect x="440" y="40" width="980" height="8" style="fill:url(#wires)"/>
       <g class="lanes fragment" data-step="1"><path d="M440 44 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
       <text class="svg-lbl" x="1664" y="54" text-anchor="end">~90 GB/s</text>
     </g>
     <g class="fragment" data-step="2">
       <text class="svg-lbl" x="0" y="140">GDDR6X (RTX 4090)</text>
-      <text class="svg-lbl" x="0" y="172" style="font-size:24px;fill:var(--muted)">384 bits × 21 Gb/s</text>
+      <text class="svg-lbl" x="0" y="172" style="font-size:24px;fill:var(--muted)">384 cables × 21 Gb/s cada uno</text>
       <rect x="440" y="134" width="980" height="24" style="fill:url(#wires)"/>
       <g class="lanes fragment" data-step="2"><path d="M440 140 H1420 M440 152 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
       <text class="svg-lbl" x="1664" y="156" text-anchor="end">~1 TB/s</text>
     </g>
     <g class="fragment" data-step="3">
       <text class="svg-lbl" x="0" y="370">HBM3 (H100)</text>
-      <text class="svg-lbl" x="0" y="402" style="font-size:24px;fill:var(--muted)">5 120 bits × 5,2 Gb/s</text>
+      <text class="svg-lbl" x="0" y="402" style="font-size:24px;fill:var(--muted)">5 120 cables × 5,2 Gb/s cada uno</text>
       <rect x="440" y="230" width="980" height="300" style="fill:url(#wires)"/>
       <g class="lanes fragment" data-step="3"><path d="M440 250 H1420 M440 290 H1420 M440 330 H1420 M440 370 H1420 M440 410 H1420 M440 450 H1420 M440 490 H1420" style="fill:none;stroke:var(--accent);stroke-width:4"/></g>
       <text class="svg-lbl" x="1664" y="390" text-anchor="end">~3,35 TB/s</text>
@@ -1451,9 +1452,11 @@ Latencia: curiosamente, la VRAM tarda más que la RAM en entregar un dato suelto
   <p class="fragment" data-step="4" style="margin-top:20px">Cada cable de la HBM es más lento que uno de GDDR, <b>pero son 13 veces más cables</b>.</p>
   <div class="foot"></div>
   <aside class="notes">
-Cuatro clics. El grosor de cada franja es proporcional al número de cables (bits) que conectan la memoria con el chip.
+Cuatro clics. Primero, la palabra: «bus» es el conjunto de cables que une la memoria con el chip (la CPU o la GPU). Por cada cable pasa un bit a la vez; el «ancho del bus» es cuántos cables hay. El grosor de cada franja es proporcional a ese número.
 
-Velocidad = número de cables × velocidad de cada cable.
+Es la misma idea de los carriles de PCIe de hace un rato: más cables en paralelo, más datos por segundo. La diferencia es que aquí los cables van de la memoria al chip, pegados, y son muchos más.
+
+Velocidad = número de cables × velocidad de cada cable ÷ 8 (para pasar de bits a bytes).
 
 Clic 1, RAM de un PC: 2 canales de 64 bits = 128 cables, cada uno a 5,6 Gb/s (DDR5-5600). 128 × 5,6 ÷ 8 ≈ 90 GB/s.
 
